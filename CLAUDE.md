@@ -4,7 +4,7 @@
 
 ```powershell
 # 起動（バックエンド: backend/ ディレクトリで実行）
-.\gradlew.bat bootRun
+.\mvnw.cmd spring-boot:run
 
 # 起動（フロントエンド: frontend/ ディレクトリで実行）
 npm run dev
@@ -18,7 +18,7 @@ npm run dev
 
 ## 技術スタック固有のルール
 
-- バックエンド: Java / Spring Boot（Gradle）
+- バックエンド: Java / Spring Boot（Maven）
   - DB更新を伴うServiceメソッドには `@Transactional` を付与する
   - Controller に業務ロジックを書かず、Service 層に集約する
   - パスワードは必ずハッシュ化（BCrypt等）して保存し、平文をログに出力しない
@@ -33,8 +33,11 @@ npm run dev
 
 ## ドキュメント更新対象
 
-<!-- コード変更時に必ず確認・更新する .md ファイルを列挙してください -->
 - README.md
 - DEVELOPMENT.md
 - docs/requirements.md
-- docs/design.md
+- docs/functional-requirements.md
+- docs/tech-stack.md
+- docs/screen-design.md
+- docs/database-design.md
+- docs/features/（機能単位の機能定義書）
