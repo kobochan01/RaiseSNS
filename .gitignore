@@ -1,0 +1,29 @@
+# 依存パッケージ
+node_modules/
+
+# ビルド成果物
+dist/
+build/
+out/
+
+# 環境変数
+.env
+.env.local
+.env.*.local
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.suo
+*.user
+
+# ログ
+*.log
+npm-debug.log*
+
+# テスト
+coverage/
