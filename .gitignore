@@ -5,6 +5,11 @@ node_modules/
 dist/
 build/
 out/
+backend/build/
+backend/.gradle/
+backend/bin/
+!backend/gradle/wrapper/gradle-wrapper.jar
+*.iml
 
 # 環境変数
 .env

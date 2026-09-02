@@ -24,7 +24,7 @@ X（旧Twitter）のタイムライン形式を模した、学習目的の SNS �
 | 領域 | 技術 |
 |---|---|
 | フロントエンド | React（Vite, TypeScript） |
-| バックエンド | Spring Boot（Maven） |
+| バックエンド | Spring Boot（Gradle） |
 | データベース | PostgreSQL |
 | 画像ストレージ | AWS S3 |
 
@@ -34,7 +34,7 @@ X（旧Twitter）のタイムライン形式を模した、学習目的の SNS �
 
 ```bash
 # 依存パッケージのインストール（backend/）
-./mvnw install
+./gradlew build
 
 # 依存パッケージのインストール（frontend/）
 npm install

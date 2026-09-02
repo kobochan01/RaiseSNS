@@ -1,0 +1,16 @@
+services:
+  db:
+    image: postgres:16
+    container_name: raisesns-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-raisesns}
+      POSTGRES_USER: ${POSTGRES_USER:-raisesns}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-raisesns}
+    ports:
+      - "${POSTGRES_PORT:-5433}:5432"
+    volumes:
+      - raisesns-db-data:/var/lib/postgresql/data
+
+volumes:
+  raisesns-db-data:
