@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>RaiseSNS（プロトタイプ）</title>
+<link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <div id="app">
+    <header id="app-header" class="app-header">
+      <a href="#/timeline" class="logo">RaiseSNS</a>
+      <form id="search-form" class="search-form">
+        <input type="search" id="search-input" class="search-input" placeholder="ユーザーを検索（@username）" />
+        <button type="submit" class="btn btn--outline btn--sm">検索</button>
+      </form>
+      <div class="header-user">
+        <a id="header-username" class="header-username" href="#/timeline"></a>
+        <button id="logout-btn" type="button" class="btn btn--ghost btn--sm">ログアウト</button>
+      </div>
+    </header>
+    <main id="view-root" class="view-root"></main>
+  </div>
+
+  <div id="modal-root" class="modal-root" aria-hidden="true"></div>
+
+  <script src="js/utils.js"></script>
+  <script src="js/data.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/modal.js"></script>
+  <script src="js/router.js"></script>
+  <script src="js/views/login.js"></script>
+  <script src="js/views/signup.js"></script>
+  <script src="js/views/timeline.js"></script>
+  <script src="js/views/profile.js"></script>
+  <script src="js/views/profileEdit.js"></script>
+  <script src="js/views/followList.js"></script>
+  <script src="js/views/search.js"></script>
+  <script src="js/modals/postCreate.js"></script>
+  <script src="js/modals/postDetail.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
