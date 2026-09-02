@@ -1,0 +1,21 @@
+spring:
+  application:
+    name: backend
+  datasource:
+    url: jdbc:postgresql://localhost:${POSTGRES_PORT:5433}/${POSTGRES_DB:raisesns}
+    username: ${POSTGRES_USER:raisesns}
+    password: ${POSTGRES_PASSWORD:raisesns}
+  flyway:
+    enabled: true
+
+mybatis:
+  configuration:
+    map-underscore-to-camel-case: true
+
+app:
+  jwt:
+    secret: ${JWT_SECRET:local-dev-only-secret-please-override-32bytes-min-xxxxxxxx}
+    expiration-ms: ${JWT_EXPIRATION_MS:86400000}
+  cookie:
+    name: ACCESS_TOKEN
+    secure: ${COOKIE_SECURE:false}

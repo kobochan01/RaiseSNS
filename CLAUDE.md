@@ -4,7 +4,7 @@
 
 ```powershell
 # 起動（バックエンド: backend/ ディレクトリで実行）
-.\mvnw.cmd spring-boot:run
+.\gradlew.bat bootRun
 
 # 起動（フロントエンド: frontend/ ディレクトリで実行）
 npm run dev
@@ -18,7 +18,7 @@ npm run dev
 
 ## 技術スタック固有のルール
 
-- バックエンド: Java / Spring Boot（Maven）
+- バックエンド: Java 25 / Spring Boot 3.5.0（Gradle）・REST API
   - DB更新を伴うServiceメソッドには `@Transactional` を付与する
   - Controller に業務ロジックを書かず、Service 層に集約する
   - パスワードは必ずハッシュ化（BCrypt等）して保存し、平文をログに出力しない

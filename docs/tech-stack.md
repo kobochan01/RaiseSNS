@@ -13,13 +13,14 @@
 
 | 役割 | 技術 | バージョン |
 |------|------|-----------|
-| 言語 | Java | 21 |
-| フレームワーク | Spring Boot | 3.3.5 |
-| API | Spring Web MVC | Spring Boot 3.3.5 同梱 |
-| ORM | Spring Data JPA + Hibernate | Spring Boot 3.3.5 同梱 |
-| 認証 | Spring Security（メールアドレス＋パスワード、パスワードはハッシュ化） | Spring Boot 3.3.5 同梱 |
-| ビルドツール | Maven (mvnw) | 3.9.15 |
-| ユーティリティ | Lombok | Spring Boot 3.3.5 同梱 |
+| 言語 | Java | 25 |
+| フレームワーク | Spring Boot | 3.5.0 |
+| API | REST API（Spring Web MVC） | Spring Boot 3.5.0 同梱 |
+| ORM | MyBatis | 3.0.4（mybatis-spring-boot-starter） |
+| 認証 | Spring Security + JWT（メールアドレス＋パスワード、パスワードはハッシュ化、JWTをHttpOnly Cookieで発行） | Spring Boot 3.5.0 同梱 / jjwt 0.12.6 |
+| DBマイグレーション | Flyway | Spring Boot 3.5.0 同梱 |
+| ビルドツール | Gradle | 9.7.1 |
+| ユーティリティ | Lombok | Spring Boot 3.5.0 同梱 |
 
 ## データベース・ストレージ・ローカル開発環境
 
@@ -30,7 +31,7 @@
 | コンテナ | Docker | 29.4.3 |
 | コンテナ管理 | Docker Compose | 5.1.3 |
 
-> フロントエンド・バックエンド・データベースのバージョンは FirstTaskManager プロジェクトに合わせている。画像ストレージ（AWS S3）はRaiseSNS固有の要件。
+> フロントエンド・データベースのバージョンは FirstTaskManager プロジェクトに合わせている。バックエンドは Java 25 / Spring Boot 3.5.0 / Gradle を採用。画像ストレージ（AWS S3）はRaiseSNS固有の要件。
 
 ## ディレクトリ構成
 
