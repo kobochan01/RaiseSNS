@@ -15,7 +15,10 @@ mybatis:
 app:
   jwt:
     secret: ${JWT_SECRET:local-dev-only-secret-please-override-32bytes-min-xxxxxxxx}
-    expiration-ms: ${JWT_EXPIRATION_MS:86400000}
+    expiration-ms: ${JWT_EXPIRATION_MS:900000}
+  refresh-token:
+    expiration-days: ${REFRESH_TOKEN_EXPIRATION_DAYS:7}
   cookie:
-    name: ACCESS_TOKEN
+    access-token-name: ACCESS_TOKEN
+    refresh-token-name: REFRESH_TOKEN
     secure: ${COOKIE_SECURE:false}
