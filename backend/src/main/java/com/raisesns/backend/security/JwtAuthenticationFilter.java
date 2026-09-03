@@ -23,7 +23,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     public JwtAuthenticationFilter(JwtTokenProvider jwtTokenProvider, CookieProperties cookieProperties) {
         this.jwtTokenProvider = jwtTokenProvider;
-        this.cookieName = cookieProperties.name();
+        this.cookieName = cookieProperties.accessTokenName();
     }
 
     @Override

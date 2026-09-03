@@ -18,7 +18,7 @@ class JwtAuthenticationFilterTest {
     private static final String SECRET = "test-secret-key-for-jwt-must-be-at-least-32-bytes-long";
 
     private final JwtTokenProvider jwtTokenProvider = new JwtTokenProvider(new JwtProperties(SECRET, 60_000));
-    private final CookieProperties cookieProperties = new CookieProperties("ACCESS_TOKEN", false);
+    private final CookieProperties cookieProperties = new CookieProperties("ACCESS_TOKEN", "REFRESH_TOKEN", false);
     private final JwtAuthenticationFilter filter = new JwtAuthenticationFilter(jwtTokenProvider, cookieProperties);
 
     @AfterEach
