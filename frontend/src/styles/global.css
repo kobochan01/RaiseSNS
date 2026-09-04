@@ -13,6 +13,7 @@
   --color-danger: #f4212e;
   --radius-pill: 9999px;
   --radius-sm: 8px;
+  --radius-md: 16px;
   --font: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Segoe UI", "Noto Sans JP", -apple-system, BlinkMacSystemFont,
     sans-serif;
 }
@@ -77,6 +78,31 @@ button {
 
 .btn--full {
   width: 100%;
+}
+
+.btn--sm {
+  padding: 5px 12px;
+  font-size: 13px;
+}
+
+.btn--ghost {
+  background-color: transparent;
+  border-color: var(--color-border);
+  color: var(--color-text);
+}
+
+.btn-link {
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--color-text-secondary);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.btn-link:hover {
+  color: var(--color-accent);
 }
 
 /* ===== Auth / Home screens ===== */
@@ -147,4 +173,190 @@ button {
   padding: 10px 14px;
   font-size: 13px;
   margin-bottom: 16px;
+}
+
+/* ===== Timeline ===== */
+.timeline-screen {
+  max-width: 600px;
+  margin: 0 auto;
+  min-height: 100vh;
+  background-color: var(--color-bg);
+  border-left: 1px solid var(--color-border);
+  border-right: 1px solid var(--color-border);
+}
+
+.timeline-header {
+  position: sticky;
+  top: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--color-border);
+  background-color: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(6px);
+}
+
+.timeline-header__title {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--color-accent);
+}
+
+.tabs {
+  display: flex;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.tab {
+  flex: 1;
+  padding: 14px 0;
+  background: none;
+  border: none;
+  border-bottom: 3px solid transparent;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+}
+
+.tab.is-active {
+  color: var(--color-text);
+  border-bottom-color: var(--color-accent);
+}
+
+.timeline-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.timeline-load-more {
+  height: 1px;
+}
+
+.empty-state {
+  padding: 40px 20px;
+  text-align: center;
+  color: var(--color-text-secondary);
+  font-size: 14px;
+}
+
+/* ===== Post create / edit ===== */
+.post-create {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.post-create__textarea,
+.post-card__edit-textarea {
+  width: 100%;
+  min-height: 80px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  font-size: 15px;
+  font-family: inherit;
+  resize: vertical;
+}
+
+.post-create__footer {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 8px;
+}
+
+.field-meta {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 4px;
+}
+
+.char-counter {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+
+.char-counter.is-over {
+  color: var(--color-danger);
+}
+
+.edit-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+/* ===== Post card ===== */
+.avatar {
+  flex-shrink: 0;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-weight: 700;
+  background-size: cover;
+  background-position: center;
+}
+
+.avatar--sm {
+  width: 32px;
+  height: 32px;
+  font-size: 13px;
+}
+
+.avatar--md {
+  width: 44px;
+  height: 44px;
+  font-size: 17px;
+}
+
+.post-card {
+  display: flex;
+  gap: 12px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.post-card:hover {
+  background-color: var(--color-bg-secondary);
+}
+
+.post-card__body {
+  flex: 1;
+  min-width: 0;
+}
+
+.post-card__head {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.post-card__name {
+  font-weight: 700;
+  font-size: 15px;
+}
+
+.post-card__username,
+.post-card__time {
+  color: var(--color-text-secondary);
+  font-size: 13px;
+}
+
+.post-card__text {
+  margin: 4px 0 0;
+  font-size: 15px;
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+}
+
+.post-card__owner-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 8px;
 }
