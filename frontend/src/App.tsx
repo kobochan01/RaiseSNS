@@ -3,9 +3,9 @@ import { Navigate, Route, Routes } from 'react-router-dom'
 import { refresh } from './api/auth'
 import { ProtectedRoute } from './components/ProtectedRoute'
 import { useAuth } from './context/AuthContext'
-import { HomePage } from './pages/HomePage'
 import { LoginPage } from './pages/LoginPage'
 import { SignupPage } from './pages/SignupPage'
+import { TimelinePage } from './pages/TimelinePage'
 
 export function App() {
   const { setUser } = useAuth()
@@ -30,7 +30,7 @@ export function App() {
         path="/"
         element={
           <ProtectedRoute>
-            <HomePage />
+            <TimelinePage />
           </ProtectedRoute>
         }
       />
