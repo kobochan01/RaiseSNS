@@ -29,9 +29,16 @@ export type TimelineResponse = {
 export type CreatePostRequest = { body: string }
 export type UpdatePostRequest = { body: string }
 
-export function getTimeline(scope: TimelineScope, cursor?: number, limit = 20): Promise<TimelineResponse> {
+export function getTimeline(
+  scope: TimelineScope,
+  cursor?: number,
+  limit = 20,
+  sinceId?: number,
+): Promise<TimelineResponse> {
   const params = new URLSearchParams({ scope, limit: String(limit) })
-  if (cursor !== undefined) {
+  if (sinceId !== undefined) {
+    params.set('sinceId', String(sinceId))
+  } else if (cursor !== undefined) {
     params.set('cursor', String(cursor))
   }
   return apiFetch(`/posts?${params.toString()}`)

@@ -7,6 +7,7 @@ import { PostCard } from '../components/PostCard'
 import { useAuth } from '../context/AuthContext'
 
 const MAX_BODY_LENGTH = 280
+const POLL_INTERVAL_MS = 30000
 
 export function TimelinePage() {
   const { user, setUser } = useAuth()
@@ -18,6 +19,7 @@ export function TimelinePage() {
   const [loading, setLoading] = useState(true)
   const [loadingMore, setLoadingMore] = useState(false)
   const [loadError, setLoadError] = useState<string | null>(null)
+  const [pendingNewPosts, setPendingNewPosts] = useState<Post[]>([])
 
   const [showCreateForm, setShowCreateForm] = useState(false)
   const [newBody, setNewBody] = useState('')
@@ -25,11 +27,14 @@ export function TimelinePage() {
   const [createError, setCreateError] = useState<string | null>(null)
 
   const sentinelRef = useRef<HTMLDivElement | null>(null)
+  const postsRef = useRef<Post[]>([])
+  postsRef.current = posts
 
   useEffect(() => {
     let cancelled = false
     setLoading(true)
     setLoadError(null)
+    setPendingNewPosts([])
     getTimeline(activeTab)
       .then((response) => {
         if (cancelled) return
@@ -48,6 +53,28 @@ export function TimelinePage() {
       cancelled = true
     }
   }, [activeTab])
+
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      if (document.hidden) return
+      const latestId = postsRef.current[0]?.id ?? 0
+      getTimeline(activeTab, undefined, undefined, latestId)
+        .then((response) => {
+          if (response.posts.length > 0) {
+            setPendingNewPosts(response.posts)
+          }
+        })
+        .catch(() => {
+          // 新着チェックの失敗は画面表示に影響させない
+        })
+    }, POLL_INTERVAL_MS)
+    return () => clearInterval(intervalId)
+  }, [activeTab])
+
+  function handleShowNewPosts() {
+    setPosts((prev) => [...pendingNewPosts, ...prev])
+    setPendingNewPosts([])
+  }
 
   useEffect(() => {
     const sentinel = sentinelRef.current
@@ -178,6 +205,12 @@ export function TimelinePage() {
       )}
 
       {loadError && <div className="form-error">{loadError}</div>}
+
+      {pendingNewPosts.length > 0 && (
+        <button type="button" className="new-posts-banner" onClick={handleShowNewPosts}>
+          新しい投稿があります
+        </button>
+      )}
 
       {!loading && posts.length === 0 && (
         <div className="empty-state">

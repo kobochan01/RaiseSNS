@@ -92,6 +92,15 @@ public class PostService {
         return new TimelineResponse(posts, nextCursor);
     }
 
+    public List<PostResponse> getNewPosts(String scope, Long sinceId) {
+        if (SCOPE_FOLLOWING.equals(scope)) {
+            return List.of();
+        }
+
+        List<PostFeedRow> rows = postMapper.findNewerThan(sinceId, MAX_LIMIT);
+        return rows.stream().map(this::toPostResponse).collect(Collectors.toList());
+    }
+
     private void assertOwner(Post post, Long userId) {
         if (!post.getUserId().equals(userId)) {
             throw new PostAccessDeniedException();

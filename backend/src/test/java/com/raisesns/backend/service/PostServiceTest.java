@@ -184,6 +184,24 @@ class PostServiceTest {
         assertThat(response.nextCursor()).isNull();
     }
 
+    @Test
+    void getNewPostsReturnsEmptyListForFollowingScope() {
+        List<PostResponse> posts = postService.getNewPosts("following", 1L);
+
+        assertThat(posts).isEmpty();
+        verify(postMapper, never()).findNewerThan(any(), anyInt());
+    }
+
+    @Test
+    void getNewPostsReturnsPostsNewerThanGivenId() {
+        List<PostFeedRow> rows = List.of(feedRow(3L), feedRow(2L));
+        when(postMapper.findNewerThan(1L, 50)).thenReturn(rows);
+
+        List<PostResponse> posts = postService.getNewPosts("all", 1L);
+
+        assertThat(posts).extracting(PostResponse::id).containsExactly(3L, 2L);
+    }
+
     private PostFeedRow feedRow(Long id) {
         LocalDateTime now = LocalDateTime.now();
         return PostFeedRow.builder()
