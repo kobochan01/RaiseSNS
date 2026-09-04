@@ -45,4 +45,17 @@ public interface PostMapper {
             </script>
             """)
     List<PostFeedRow> findFeed(@Param("cursor") Long cursor, @Param("limit") int limit);
+
+    @Select("""
+            SELECT p.id AS id, p.user_id AS user_id, p.body AS body, p.image_url AS image_url,
+                   p.created_at AS created_at, p.updated_at AS updated_at,
+                   u.id AS author_id, u.username AS author_username,
+                   u.display_name AS author_display_name, u.avatar_url AS author_avatar_url
+            FROM posts p
+            JOIN users u ON u.id = p.user_id
+            WHERE p.id > #{sinceId}
+            ORDER BY p.id DESC
+            LIMIT #{limit}
+            """)
+    List<PostFeedRow> findNewerThan(@Param("sinceId") Long sinceId, @Param("limit") int limit);
 }

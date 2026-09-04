@@ -41,7 +41,11 @@ public class PostController {
     public ResponseEntity<TimelineResponse> getTimeline(
             @RequestParam(defaultValue = "all") String scope,
             @RequestParam(required = false) Long cursor,
-            @RequestParam(required = false) Integer limit) {
+            @RequestParam(required = false) Integer limit,
+            @RequestParam(required = false) Long sinceId) {
+        if (sinceId != null) {
+            return ResponseEntity.ok(new TimelineResponse(postService.getNewPosts(scope, sinceId), null));
+        }
         return ResponseEntity.ok(postService.getTimeline(scope, cursor, limit));
     }
 

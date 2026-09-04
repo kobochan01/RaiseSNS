@@ -157,4 +157,41 @@ class PostMapperTest extends AbstractIntegrationTest {
         assertThat(rows).extracting(PostFeedRow::getId)
                 .containsExactly(second.getId(), first.getId());
     }
+
+    @Test
+    void findNewerThanReturnsOnlyPostsAfterGivenId() {
+        Post first = newPost("1件目");
+        postMapper.insert(first);
+        Post second = newPost("2件目");
+        postMapper.insert(second);
+        Post third = newPost("3件目");
+        postMapper.insert(third);
+
+        List<PostFeedRow> rows = postMapper.findNewerThan(first.getId(), 10);
+
+        assertThat(rows).extracting(PostFeedRow::getId)
+                .containsExactly(third.getId(), second.getId());
+    }
+
+    @Test
+    void findNewerThanReturnsEmptyWhenNoNewerPosts() {
+        Post first = newPost("1件目");
+        postMapper.insert(first);
+
+        List<PostFeedRow> rows = postMapper.findNewerThan(first.getId(), 10);
+
+        assertThat(rows).isEmpty();
+    }
+
+    @Test
+    void findNewerThanRespectsLimit() {
+        Post first = newPost("1件目");
+        postMapper.insert(first);
+        postMapper.insert(newPost("2件目"));
+        postMapper.insert(newPost("3件目"));
+
+        List<PostFeedRow> rows = postMapper.findNewerThan(first.getId(), 1);
+
+        assertThat(rows).hasSize(1);
+    }
 }

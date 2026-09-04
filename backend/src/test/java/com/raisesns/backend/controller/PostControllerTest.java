@@ -192,6 +192,31 @@ class PostControllerTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void timelineWithSinceIdReturnsOnlyNewerPosts() throws Exception {
+        Cookie accessToken = registerAndLogin("timelineuser4", "timelineuser4@example.com");
+        Long firstId = createPost(accessToken, "1件目");
+        createPost(accessToken, "2件目");
+        createPost(accessToken, "3件目");
+
+        mockMvc.perform(get("/api/posts").cookie(accessToken).param("scope", "all").param("sinceId", String.valueOf(firstId)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.posts.length()").value(2))
+                .andExpect(jsonPath("$.posts[0].body").value("3件目"))
+                .andExpect(jsonPath("$.posts[1].body").value("2件目"))
+                .andExpect(jsonPath("$.nextCursor").doesNotExist());
+    }
+
+    @Test
+    void timelineWithSinceIdReturnsEmptyListForFollowingScope() throws Exception {
+        Cookie accessToken = registerAndLogin("timelineuser5", "timelineuser5@example.com");
+        Long firstId = createPost(accessToken, "1件目");
+
+        mockMvc.perform(get("/api/posts").cookie(accessToken).param("scope", "following").param("sinceId", String.valueOf(firstId)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.posts.length()").value(0));
+    }
+
+    @Test
     void timelineReturnsEmptyListForFollowingScope() throws Exception {
         Cookie accessToken = registerAndLogin("timelineuser3", "timelineuser3@example.com");
         createPost(accessToken, "1件目");

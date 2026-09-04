@@ -1,8 +1,8 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { useEffect } from 'react'
 import { MemoryRouter } from 'react-router-dom'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { logout } from '../api/auth'
 import { createPost, getTimeline, type Post, type TimelineResponse } from '../api/posts'
 import { AuthProvider, useAuth, type AuthUser } from '../context/AuthContext'
@@ -84,6 +84,11 @@ describe('TimelinePage', () => {
     vi.mocked(getTimeline).mockResolvedValue(emptyResponse)
   })
 
+  afterEach(() => {
+    vi.useRealTimers()
+    Object.defineProperty(document, 'hidden', { value: false, configurable: true })
+  })
+
   it('loads the all-timeline on mount with the all tab active', async () => {
     renderTimelinePage()
 
@@ -148,6 +153,76 @@ describe('TimelinePage', () => {
     await waitFor(() => expect(createPost).toHaveBeenCalledWith({ body: '新しい投稿' }))
     expect(await screen.findByText('新しい投稿')).toBeInTheDocument()
     expect(screen.queryByPlaceholderText('今なにしてる?')).not.toBeInTheDocument()
+  })
+
+  it('polls for new posts every 30 seconds and shows a notification banner', async () => {
+    vi.useFakeTimers()
+    const initialPost = makePost({ id: 5, body: '最初の投稿' })
+    const newPost = makePost({ id: 6, body: '新着投稿' })
+    vi.mocked(getTimeline).mockImplementation((_scope, _cursor, _limit, sinceId) =>
+      Promise.resolve(
+        sinceId !== undefined
+          ? { posts: [newPost], nextCursor: null }
+          : { posts: [initialPost], nextCursor: null },
+      ),
+    )
+
+    renderTimelinePage()
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(0)
+    })
+    expect(screen.getByText('最初の投稿')).toBeInTheDocument()
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(30000)
+    })
+
+    expect(getTimeline).toHaveBeenCalledWith('all', undefined, undefined, 5)
+    expect(screen.getByRole('button', { name: '新しい投稿があります' })).toBeInTheDocument()
+  })
+
+  it('prepends pending new posts to the list when the notification banner is clicked', async () => {
+    vi.useFakeTimers()
+    const initialPost = makePost({ id: 5, body: '最初の投稿' })
+    const newPost = makePost({ id: 6, body: '新着投稿' })
+    vi.mocked(getTimeline).mockImplementation((_scope, _cursor, _limit, sinceId) =>
+      Promise.resolve(
+        sinceId !== undefined
+          ? { posts: [newPost], nextCursor: null }
+          : { posts: [initialPost], nextCursor: null },
+      ),
+    )
+
+    renderTimelinePage()
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(0)
+    })
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(30000)
+    })
+
+    fireEvent.click(screen.getByRole('button', { name: '新しい投稿があります' }))
+
+    expect(screen.getByText('新着投稿')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: '新しい投稿があります' })).not.toBeInTheDocument()
+  })
+
+  it('does not check for new posts while the page is hidden', async () => {
+    vi.useFakeTimers()
+    Object.defineProperty(document, 'hidden', { value: true, configurable: true })
+    vi.mocked(getTimeline).mockResolvedValue(emptyResponse)
+
+    renderTimelinePage()
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(0)
+    })
+    vi.mocked(getTimeline).mockClear()
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(30000)
+    })
+
+    expect(getTimeline).not.toHaveBeenCalled()
   })
 
   it('logs out and navigates to login when the logout button is clicked', async () => {
