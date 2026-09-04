@@ -27,7 +27,8 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                // Cookie(SameSite=Lax)を一次防御とする。状態変更を伴う保護対象APIが未実装のため今回は無効化。
+                // Cookie(SameSite=Lax)を一次防御とする。トークンベースのCSRF対策は本Issueのスコープ外とし、
+                // 投稿系のような状態変更APIも含め、既存のSameSite=Lax運用を維持する。
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
