@@ -96,4 +96,34 @@ class UserMapperTest extends AbstractIntegrationTest {
         assertThatThrownBy(() -> userMapper.insert(newUser("frank2", "frank@example.com")))
                 .isInstanceOf(DataIntegrityViolationException.class);
     }
+
+    @Test
+    void findByUsernameReturnsMatchingUser() {
+        userMapper.insert(newUser("grace", "grace@example.com"));
+
+        Optional<User> found = userMapper.findByUsername("grace");
+
+        assertThat(found).isPresent();
+        assertThat(found.get().getEmail()).isEqualTo("grace@example.com");
+    }
+
+    @Test
+    void findByUsernameReturnsEmptyWhenNotFound() {
+        Optional<User> found = userMapper.findByUsername("nobody");
+
+        assertThat(found).isEmpty();
+    }
+
+    @Test
+    void updateProfileChangesDisplayNameAndBio() {
+        User user = newUser("heidi", "heidi@example.com");
+        userMapper.insert(user);
+
+        LocalDateTime updatedAt = LocalDateTime.now().plusMinutes(1);
+        userMapper.updateProfile(user.getId(), "新しい表示名", "新しい自己紹介", updatedAt);
+
+        User found = userMapper.findById(user.getId()).orElseThrow();
+        assertThat(found.getDisplayName()).isEqualTo("新しい表示名");
+        assertThat(found.getBio()).isEqualTo("新しい自己紹介");
+    }
 }

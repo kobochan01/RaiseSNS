@@ -8,6 +8,7 @@ import com.raisesns.backend.entity.Post;
 import com.raisesns.backend.entity.User;
 import com.raisesns.backend.exception.PostAccessDeniedException;
 import com.raisesns.backend.exception.PostNotFoundException;
+import com.raisesns.backend.exception.UserNotFoundException;
 import com.raisesns.backend.mapper.CommentMapper;
 import com.raisesns.backend.mapper.LikeMapper;
 import com.raisesns.backend.mapper.PostCountRow;
@@ -232,6 +233,37 @@ class PostServiceTest {
         List<PostResponse> posts = postService.getNewPosts(5L, "all", 1L);
 
         assertThat(posts).extracting(PostResponse::id).containsExactly(3L, 2L);
+    }
+
+    @Test
+    void getUserPostsReturnsOnlyThatUsersPosts() {
+        when(userMapper.findByUsername("author")).thenReturn(Optional.of(author(5L)));
+        List<PostFeedRow> rows = List.of(feedRow(3L), feedRow(2L));
+        when(postMapper.findByUserId(5L, null, 21)).thenReturn(rows);
+
+        TimelineResponse response = postService.getUserPosts(5L, "author", null, null);
+
+        assertThat(response.posts()).extracting(PostResponse::id).containsExactly(3L, 2L);
+    }
+
+    @Test
+    void getUserPostsThrowsUserNotFoundWhenUserDoesNotExist() {
+        when(userMapper.findByUsername("nobody")).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> postService.getUserPosts(5L, "nobody", null, null))
+                .isInstanceOf(UserNotFoundException.class);
+    }
+
+    @Test
+    void getUserPostsSetsNextCursorWhenMoreResultsExist() {
+        when(userMapper.findByUsername("author")).thenReturn(Optional.of(author(5L)));
+        List<PostFeedRow> rows = List.of(feedRow(3L), feedRow(2L), feedRow(1L));
+        when(postMapper.findByUserId(5L, null, 3)).thenReturn(rows);
+
+        TimelineResponse response = postService.getUserPosts(5L, "author", null, 2);
+
+        assertThat(response.posts()).hasSize(2);
+        assertThat(response.nextCursor()).isEqualTo(2L);
     }
 
     private PostFeedRow feedRow(Long id) {

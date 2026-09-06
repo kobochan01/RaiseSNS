@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { deletePost, updatePost, type Post } from '../api/posts'
 import { avatarColor } from '../utils/avatar'
 import { formatRelativeTime } from '../utils/time'
@@ -75,8 +76,20 @@ export function PostCard({ post, currentUserId, onUpdated, onDeleted, onOpenDeta
       </div>
       <div className="post-card__body">
         <div className="post-card__head">
-          <span className="post-card__name">{post.author.displayName}</span>
-          <span className="post-card__username">@{post.author.username}</span>
+          <Link
+            to={`/profile/${post.author.username}`}
+            className="post-card__name"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {post.author.displayName}
+          </Link>
+          <Link
+            to={`/profile/${post.author.username}`}
+            className="post-card__username"
+            onClick={(e) => e.stopPropagation()}
+          >
+            @{post.author.username}
+          </Link>
           <span className="post-card__time">・{formatRelativeTime(post.createdAt)}</span>
         </div>
         {editing ? (
