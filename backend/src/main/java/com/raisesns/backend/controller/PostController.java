@@ -39,14 +39,15 @@ public class PostController {
 
     @GetMapping
     public ResponseEntity<TimelineResponse> getTimeline(
+            @AuthenticationPrincipal Long userId,
             @RequestParam(defaultValue = "all") String scope,
             @RequestParam(required = false) Long cursor,
             @RequestParam(required = false) Integer limit,
             @RequestParam(required = false) Long sinceId) {
         if (sinceId != null) {
-            return ResponseEntity.ok(new TimelineResponse(postService.getNewPosts(scope, sinceId), null));
+            return ResponseEntity.ok(new TimelineResponse(postService.getNewPosts(userId, scope, sinceId), null));
         }
-        return ResponseEntity.ok(postService.getTimeline(scope, cursor, limit));
+        return ResponseEntity.ok(postService.getTimeline(userId, scope, cursor, limit));
     }
 
     @PutMapping("/{id}")

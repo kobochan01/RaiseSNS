@@ -47,4 +47,19 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handlePostAccessDenied(PostAccessDeniedException ex) {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ErrorResponse(ex.getMessage(), null));
     }
+
+    @ExceptionHandler(CommentNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleCommentNotFound(CommentNotFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ErrorResponse(ex.getMessage(), null));
+    }
+
+    @ExceptionHandler(CommentAccessDeniedException.class)
+    public ResponseEntity<ErrorResponse> handleCommentAccessDenied(CommentAccessDeniedException ex) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ErrorResponse(ex.getMessage(), null));
+    }
+
+    @ExceptionHandler(InvalidCommentParentException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidCommentParent(InvalidCommentParentException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ErrorResponse(ex.getMessage(), null));
+    }
 }
