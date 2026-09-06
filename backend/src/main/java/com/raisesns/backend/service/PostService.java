@@ -9,6 +9,9 @@ import com.raisesns.backend.entity.Post;
 import com.raisesns.backend.entity.User;
 import com.raisesns.backend.exception.PostAccessDeniedException;
 import com.raisesns.backend.exception.PostNotFoundException;
+import com.raisesns.backend.mapper.CommentMapper;
+import com.raisesns.backend.mapper.LikeMapper;
+import com.raisesns.backend.mapper.PostCountRow;
 import com.raisesns.backend.mapper.PostFeedRow;
 import com.raisesns.backend.mapper.PostMapper;
 import com.raisesns.backend.mapper.UserMapper;
@@ -16,7 +19,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -28,10 +34,14 @@ public class PostService {
 
     private final PostMapper postMapper;
     private final UserMapper userMapper;
+    private final LikeMapper likeMapper;
+    private final CommentMapper commentMapper;
 
-    public PostService(PostMapper postMapper, UserMapper userMapper) {
+    public PostService(PostMapper postMapper, UserMapper userMapper, LikeMapper likeMapper, CommentMapper commentMapper) {
         this.postMapper = postMapper;
         this.userMapper = userMapper;
+        this.likeMapper = likeMapper;
+        this.commentMapper = commentMapper;
     }
 
     @Transactional
@@ -46,7 +56,7 @@ public class PostService {
         postMapper.insert(post);
 
         User author = userMapper.findById(userId).orElseThrow(IllegalStateException::new);
-        return toPostResponse(post, author);
+        return toPostResponse(post, author, 0, 0, false);
     }
 
     @Transactional
@@ -65,7 +75,10 @@ public class PostService {
         postMapper.update(updated);
 
         User author = userMapper.findById(userId).orElseThrow(IllegalStateException::new);
-        return toPostResponse(updated, author);
+        int likeCount = likeMapper.countByPostId(postId);
+        int commentCount = commentMapper.countByPostId(postId);
+        boolean isLikedByMe = likeMapper.existsByPostIdAndUserId(postId, userId);
+        return toPostResponse(updated, author, likeCount, commentCount, isLikedByMe);
     }
 
     @Transactional
@@ -76,7 +89,7 @@ public class PostService {
         postMapper.deleteById(postId);
     }
 
-    public TimelineResponse getTimeline(String scope, Long cursor, Integer limit) {
+    public TimelineResponse getTimeline(Long currentUserId, String scope, Long cursor, Integer limit) {
         if (SCOPE_FOLLOWING.equals(scope)) {
             return new TimelineResponse(List.of(), null);
         }
@@ -88,17 +101,40 @@ public class PostService {
         List<PostFeedRow> pageRows = hasMore ? rows.subList(0, normalizedLimit) : rows;
         Long nextCursor = hasMore ? pageRows.get(pageRows.size() - 1).getId() : null;
 
-        List<PostResponse> posts = pageRows.stream().map(this::toPostResponse).collect(Collectors.toList());
+        List<PostResponse> posts = toPostResponses(currentUserId, pageRows);
         return new TimelineResponse(posts, nextCursor);
     }
 
-    public List<PostResponse> getNewPosts(String scope, Long sinceId) {
+    public List<PostResponse> getNewPosts(Long currentUserId, String scope, Long sinceId) {
         if (SCOPE_FOLLOWING.equals(scope)) {
             return List.of();
         }
 
         List<PostFeedRow> rows = postMapper.findNewerThan(sinceId, MAX_LIMIT);
-        return rows.stream().map(this::toPostResponse).collect(Collectors.toList());
+        return toPostResponses(currentUserId, rows);
+    }
+
+    // 投稿1件ごとにいいね/コメント数を問い合わせるとN+1になるため、対象投稿IDをまとめてバッチ集計する
+    private List<PostResponse> toPostResponses(Long currentUserId, List<PostFeedRow> rows) {
+        List<Long> postIds = rows.stream().map(PostFeedRow::getId).collect(Collectors.toList());
+        if (postIds.isEmpty()) {
+            return List.of();
+        }
+
+        Map<Long, Integer> likeCounts = toCountMap(likeMapper.countsByPostIds(postIds));
+        Map<Long, Integer> commentCounts = toCountMap(commentMapper.countsByPostIds(postIds));
+        Set<Long> likedByMe = new HashSet<>(likeMapper.findLikedPostIds(currentUserId, postIds));
+
+        return rows.stream()
+                .map(row -> toPostResponse(row,
+                        likeCounts.getOrDefault(row.getId(), 0),
+                        commentCounts.getOrDefault(row.getId(), 0),
+                        likedByMe.contains(row.getId())))
+                .collect(Collectors.toList());
+    }
+
+    private Map<Long, Integer> toCountMap(List<PostCountRow> rows) {
+        return rows.stream().collect(Collectors.toMap(PostCountRow::getPostId, PostCountRow::getCount));
     }
 
     private void assertOwner(Post post, Long userId) {
@@ -114,17 +150,17 @@ public class PostService {
         return Math.max(1, Math.min(limit, MAX_LIMIT));
     }
 
-    private PostResponse toPostResponse(Post post, User author) {
+    private PostResponse toPostResponse(Post post, User author, int likeCount, int commentCount, boolean isLikedByMe) {
         AuthorResponse authorResponse =
                 new AuthorResponse(author.getId(), author.getUsername(), author.getDisplayName(), author.getAvatarUrl());
         return new PostResponse(post.getId(), authorResponse, post.getBody(), post.getImageUrl(),
-                0, 0, false, post.getCreatedAt(), post.getUpdatedAt());
+                likeCount, commentCount, isLikedByMe, post.getCreatedAt(), post.getUpdatedAt());
     }
 
-    private PostResponse toPostResponse(PostFeedRow row) {
+    private PostResponse toPostResponse(PostFeedRow row, int likeCount, int commentCount, boolean isLikedByMe) {
         AuthorResponse authorResponse = new AuthorResponse(
                 row.getAuthorId(), row.getAuthorUsername(), row.getAuthorDisplayName(), row.getAuthorAvatarUrl());
         return new PostResponse(row.getId(), authorResponse, row.getBody(), row.getImageUrl(),
-                0, 0, false, row.getCreatedAt(), row.getUpdatedAt());
+                likeCount, commentCount, isLikedByMe, row.getCreatedAt(), row.getUpdatedAt());
     }
 }

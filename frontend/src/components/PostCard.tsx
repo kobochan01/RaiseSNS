@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { deletePost, updatePost, type Post } from '../api/posts'
 import { avatarColor } from '../utils/avatar'
 import { formatRelativeTime } from '../utils/time'
+import { LikeButton } from './LikeButton'
 
 const MAX_BODY_LENGTH = 280
 
@@ -10,9 +11,10 @@ type Props = {
   currentUserId: number
   onUpdated: (post: Post) => void
   onDeleted: (postId: number) => void
+  onOpenDetail: (postId: number) => void
 }
 
-export function PostCard({ post, currentUserId, onUpdated, onDeleted }: Props) {
+export function PostCard({ post, currentUserId, onUpdated, onDeleted, onOpenDetail }: Props) {
   const [editing, setEditing] = useState(false)
   const [editBody, setEditBody] = useState(post.body)
   const [saving, setSaving] = useState(false)
@@ -61,8 +63,13 @@ export function PostCard({ post, currentUserId, onUpdated, onDeleted }: Props) {
     }
   }
 
+  function handleCardClick() {
+    if (editing) return
+    onOpenDetail(post.id)
+  }
+
   return (
-    <article className="post-card">
+    <article className="post-card" onClick={handleCardClick}>
       <div className="avatar avatar--md" style={{ backgroundColor: avatarColor(post.author.id) }}>
         {post.author.displayName.charAt(0)}
       </div>
@@ -104,12 +111,45 @@ export function PostCard({ post, currentUserId, onUpdated, onDeleted }: Props) {
         ) : (
           <p className="post-card__text">{post.body}</p>
         )}
+        <div className="post-card__actions">
+          <LikeButton
+            postId={post.id}
+            likeCount={post.likeCount}
+            isLikedByMe={post.isLikedByMe}
+            onChange={(next) => onUpdated({ ...post, ...next })}
+          />
+          <button
+            type="button"
+            className="action-btn"
+            onClick={(e) => {
+              e.stopPropagation()
+              onOpenDetail(post.id)
+            }}
+          >
+            <span className="icon">💬</span>
+            <span>{post.commentCount}</span>
+          </button>
+        </div>
         {isOwner && !editing && (
           <div className="post-card__owner-actions">
-            <button type="button" className="btn-link" onClick={startEdit}>
+            <button
+              type="button"
+              className="btn-link"
+              onClick={(e) => {
+                e.stopPropagation()
+                startEdit()
+              }}
+            >
               編集
             </button>
-            <button type="button" className="btn-link" onClick={handleDelete}>
+            <button
+              type="button"
+              className="btn-link"
+              onClick={(e) => {
+                e.stopPropagation()
+                handleDelete()
+              }}
+            >
               削除
             </button>
             {error && <p className="error-text">{error}</p>}

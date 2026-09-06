@@ -2,11 +2,17 @@ import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { deletePost, updatePost, type Post } from '../api/posts'
+import { likePost, unlikePost } from '../api/likes'
 import { PostCard } from './PostCard'
 
 vi.mock('../api/posts', () => ({
   updatePost: vi.fn(),
   deletePost: vi.fn(),
+}))
+
+vi.mock('../api/likes', () => ({
+  likePost: vi.fn(),
+  unlikePost: vi.fn(),
 }))
 
 const basePost: Post = {
@@ -24,12 +30,16 @@ const basePost: Post = {
 describe('PostCard', () => {
   const onUpdated = vi.fn()
   const onDeleted = vi.fn()
+  const onOpenDetail = vi.fn()
 
   beforeEach(() => {
     onUpdated.mockClear()
     onDeleted.mockClear()
+    onOpenDetail.mockClear()
     vi.mocked(updatePost).mockReset()
     vi.mocked(deletePost).mockReset()
+    vi.mocked(likePost).mockReset()
+    vi.mocked(unlikePost).mockReset()
   })
 
   afterEach(() => {
@@ -37,7 +47,7 @@ describe('PostCard', () => {
   })
 
   it('renders author info and body', () => {
-    render(<PostCard post={basePost} currentUserId={999} onUpdated={onUpdated} onDeleted={onDeleted} />)
+    render(<PostCard post={basePost} currentUserId={999} onUpdated={onUpdated} onDeleted={onDeleted} onOpenDetail={onOpenDetail} />)
 
     expect(screen.getByText('太郎')).toBeInTheDocument()
     expect(screen.getByText('@taro')).toBeInTheDocument()
@@ -45,21 +55,21 @@ describe('PostCard', () => {
   })
 
   it('does not show edit/delete links when the current user is not the author', () => {
-    render(<PostCard post={basePost} currentUserId={999} onUpdated={onUpdated} onDeleted={onDeleted} />)
+    render(<PostCard post={basePost} currentUserId={999} onUpdated={onUpdated} onDeleted={onDeleted} onOpenDetail={onOpenDetail} />)
 
     expect(screen.queryByRole('button', { name: '編集' })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: '削除' })).not.toBeInTheDocument()
   })
 
   it('shows edit/delete links when the current user is the author', () => {
-    render(<PostCard post={basePost} currentUserId={10} onUpdated={onUpdated} onDeleted={onDeleted} />)
+    render(<PostCard post={basePost} currentUserId={10} onUpdated={onUpdated} onDeleted={onDeleted} onOpenDetail={onOpenDetail} />)
 
     expect(screen.getByRole('button', { name: '編集' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: '削除' })).toBeInTheDocument()
   })
 
   it('switches to a textarea prefilled with the body when editing starts', async () => {
-    render(<PostCard post={basePost} currentUserId={10} onUpdated={onUpdated} onDeleted={onDeleted} />)
+    render(<PostCard post={basePost} currentUserId={10} onUpdated={onUpdated} onDeleted={onDeleted} onOpenDetail={onOpenDetail} />)
 
     await userEvent.click(screen.getByRole('button', { name: '編集' }))
 
@@ -69,7 +79,7 @@ describe('PostCard', () => {
   })
 
   it('disables save when the body exceeds 280 characters', async () => {
-    render(<PostCard post={basePost} currentUserId={10} onUpdated={onUpdated} onDeleted={onDeleted} />)
+    render(<PostCard post={basePost} currentUserId={10} onUpdated={onUpdated} onDeleted={onDeleted} onOpenDetail={onOpenDetail} />)
     await userEvent.click(screen.getByRole('button', { name: '編集' }))
 
     const textarea = screen.getByDisplayValue('元の本文')
@@ -82,7 +92,7 @@ describe('PostCard', () => {
   it('saves the edit and exits edit mode on success', async () => {
     const updated = { ...basePost, body: '更新後の本文' }
     vi.mocked(updatePost).mockResolvedValue(updated)
-    render(<PostCard post={basePost} currentUserId={10} onUpdated={onUpdated} onDeleted={onDeleted} />)
+    render(<PostCard post={basePost} currentUserId={10} onUpdated={onUpdated} onDeleted={onDeleted} onOpenDetail={onOpenDetail} />)
     await userEvent.click(screen.getByRole('button', { name: '編集' }))
 
     const textarea = screen.getByDisplayValue('元の本文')
@@ -96,7 +106,7 @@ describe('PostCard', () => {
   })
 
   it('cancels editing without calling the API', async () => {
-    render(<PostCard post={basePost} currentUserId={10} onUpdated={onUpdated} onDeleted={onDeleted} />)
+    render(<PostCard post={basePost} currentUserId={10} onUpdated={onUpdated} onDeleted={onDeleted} onOpenDetail={onOpenDetail} />)
     await userEvent.click(screen.getByRole('button', { name: '編集' }))
 
     await userEvent.click(screen.getByRole('button', { name: 'キャンセル' }))
@@ -108,7 +118,7 @@ describe('PostCard', () => {
   it('deletes the post when the confirm dialog is accepted', async () => {
     vi.spyOn(window, 'confirm').mockReturnValue(true)
     vi.mocked(deletePost).mockResolvedValue(undefined)
-    render(<PostCard post={basePost} currentUserId={10} onUpdated={onUpdated} onDeleted={onDeleted} />)
+    render(<PostCard post={basePost} currentUserId={10} onUpdated={onUpdated} onDeleted={onDeleted} onOpenDetail={onOpenDetail} />)
 
     await userEvent.click(screen.getByRole('button', { name: '削除' }))
 
@@ -118,11 +128,48 @@ describe('PostCard', () => {
 
   it('does not delete the post when the confirm dialog is cancelled', async () => {
     vi.spyOn(window, 'confirm').mockReturnValue(false)
-    render(<PostCard post={basePost} currentUserId={10} onUpdated={onUpdated} onDeleted={onDeleted} />)
+    render(<PostCard post={basePost} currentUserId={10} onUpdated={onUpdated} onDeleted={onDeleted} onOpenDetail={onOpenDetail} />)
 
     await userEvent.click(screen.getByRole('button', { name: '削除' }))
 
     expect(deletePost).not.toHaveBeenCalled()
     expect(onDeleted).not.toHaveBeenCalled()
+  })
+
+  it('opens the post detail when the card is clicked', async () => {
+    render(<PostCard post={basePost} currentUserId={999} onUpdated={onUpdated} onDeleted={onDeleted} onOpenDetail={onOpenDetail} />)
+
+    await userEvent.click(screen.getByText('元の本文'))
+
+    expect(onOpenDetail).toHaveBeenCalledWith(1)
+  })
+
+  it('opens the post detail when the comment indicator is clicked', async () => {
+    render(<PostCard post={basePost} currentUserId={999} onUpdated={onUpdated} onDeleted={onDeleted} onOpenDetail={onOpenDetail} />)
+
+    await userEvent.click(screen.getByText('💬'))
+
+    expect(onOpenDetail).toHaveBeenCalledTimes(1)
+  })
+
+  it('does not open the post detail when the like button is clicked', async () => {
+    vi.mocked(likePost).mockResolvedValue({ likeCount: 1, isLikedByMe: true })
+    render(<PostCard post={basePost} currentUserId={999} onUpdated={onUpdated} onDeleted={onDeleted} onOpenDetail={onOpenDetail} />)
+
+    await userEvent.click(screen.getByText('♡'))
+
+    expect(onOpenDetail).not.toHaveBeenCalled()
+  })
+
+  it('does not open the post detail when edit/delete links are clicked', async () => {
+    vi.spyOn(window, 'confirm').mockReturnValue(false)
+    render(<PostCard post={basePost} currentUserId={10} onUpdated={onUpdated} onDeleted={onDeleted} onOpenDetail={onOpenDetail} />)
+
+    await userEvent.click(screen.getByRole('button', { name: '編集' }))
+    expect(onOpenDetail).not.toHaveBeenCalled()
+
+    await userEvent.click(screen.getByRole('button', { name: 'キャンセル' }))
+    await userEvent.click(screen.getByRole('button', { name: '削除' }))
+    expect(onOpenDetail).not.toHaveBeenCalled()
   })
 })

@@ -4,6 +4,7 @@ import { logout } from '../api/auth'
 import { ApiError } from '../api/client'
 import { createPost, getTimeline, type Post, type TimelineScope } from '../api/posts'
 import { PostCard } from '../components/PostCard'
+import { PostDetailModal } from '../components/PostDetailModal'
 import { useAuth } from '../context/AuthContext'
 
 const MAX_BODY_LENGTH = 280
@@ -25,6 +26,8 @@ export function TimelinePage() {
   const [newBody, setNewBody] = useState('')
   const [creating, setCreating] = useState(false)
   const [createError, setCreateError] = useState<string | null>(null)
+
+  const [selectedPostId, setSelectedPostId] = useState<number | null>(null)
 
   const sentinelRef = useRef<HTMLDivElement | null>(null)
   const postsRef = useRef<Post[]>([])
@@ -226,10 +229,26 @@ export function TimelinePage() {
             currentUserId={user.id}
             onUpdated={handlePostUpdated}
             onDeleted={handlePostDeleted}
+            onOpenDetail={setSelectedPostId}
           />
         ))}
 
       <div ref={sentinelRef} className="timeline-load-more" />
+
+      {user &&
+        selectedPostId !== null &&
+        (() => {
+          const selectedPost = posts.find((p) => p.id === selectedPostId)
+          if (!selectedPost) return null
+          return (
+            <PostDetailModal
+              post={selectedPost}
+              currentUserId={user.id}
+              onClose={() => setSelectedPostId(null)}
+              onUpdated={handlePostUpdated}
+            />
+          )
+        })()}
     </div>
   )
 }
