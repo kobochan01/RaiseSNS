@@ -194,4 +194,49 @@ class PostMapperTest extends AbstractIntegrationTest {
 
         assertThat(rows).hasSize(1);
     }
+
+    @Test
+    void findByUserIdReturnsOnlyThatUsersPosts() {
+        LocalDateTime now = LocalDateTime.now();
+        User otherAuthor = User.builder()
+                .username("otherauthor" + System.nanoTime())
+                .email("otherauthor" + System.nanoTime() + "@example.com")
+                .passwordHash("hashed-password")
+                .displayName("別の投稿者")
+                .createdAt(now)
+                .updatedAt(now)
+                .build();
+        userMapper.insert(otherAuthor);
+
+        Post mine = newPost("自分の投稿");
+        postMapper.insert(mine);
+        Post others = Post.builder().userId(otherAuthor.getId()).body("他人の投稿").createdAt(now).updatedAt(now).build();
+        postMapper.insert(others);
+
+        List<PostFeedRow> rows = postMapper.findByUserId(authorId, null, 10);
+
+        assertThat(rows).extracting(PostFeedRow::getId).containsExactly(mine.getId());
+    }
+
+    @Test
+    void findByUserIdWithCursorReturnsOnlyOlderPosts() {
+        Post first = newPost("1件目");
+        postMapper.insert(first);
+        Post second = newPost("2件目");
+        postMapper.insert(second);
+
+        List<PostFeedRow> rows = postMapper.findByUserId(authorId, second.getId(), 10);
+
+        assertThat(rows).extracting(PostFeedRow::getId).containsExactly(first.getId());
+    }
+
+    @Test
+    void findByUserIdRespectsLimit() {
+        postMapper.insert(newPost("1件目"));
+        postMapper.insert(newPost("2件目"));
+
+        List<PostFeedRow> rows = postMapper.findByUserId(authorId, null, 1);
+
+        assertThat(rows).hasSize(1);
+    }
 }

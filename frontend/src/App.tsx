@@ -3,7 +3,10 @@ import { Navigate, Route, Routes } from 'react-router-dom'
 import { refresh } from './api/auth'
 import { ProtectedRoute } from './components/ProtectedRoute'
 import { useAuth } from './context/AuthContext'
+import { FollowListPage } from './pages/FollowListPage'
 import { LoginPage } from './pages/LoginPage'
+import { ProfileEditPage } from './pages/ProfileEditPage'
+import { ProfilePage } from './pages/ProfilePage'
 import { SignupPage } from './pages/SignupPage'
 import { TimelinePage } from './pages/TimelinePage'
 
@@ -31,6 +34,30 @@ export function App() {
         element={
           <ProtectedRoute>
             <TimelinePage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/profile/:username"
+        element={
+          <ProtectedRoute>
+            <ProfilePage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/profile/:username/edit"
+        element={
+          <ProtectedRoute>
+            <ProfileEditPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/profile/:username/connections"
+        element={
+          <ProtectedRoute>
+            <FollowListPage />
           </ProtectedRoute>
         }
       />

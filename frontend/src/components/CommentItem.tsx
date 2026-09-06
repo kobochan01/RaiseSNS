@@ -1,4 +1,5 @@
 import { useState, type CSSProperties } from 'react'
+import { Link } from 'react-router-dom'
 import { createComment, deleteComment, type Comment } from '../api/comments'
 import { avatarColor } from '../utils/avatar'
 import { formatRelativeTime } from '../utils/time'
@@ -60,8 +61,12 @@ export function CommentItem({ comment, postId, currentUserId, depth, onDeleted, 
       </div>
       <div className="comment-item__body">
         <div className="comment-item__head">
-          <span className="comment-item__name">{comment.author.displayName}</span>
-          <span className="comment-item__username">@{comment.author.username}</span>
+          <Link to={`/profile/${comment.author.username}`} className="comment-item__name">
+            {comment.author.displayName}
+          </Link>
+          <Link to={`/profile/${comment.author.username}`} className="comment-item__username">
+            @{comment.author.username}
+          </Link>
           <span className="comment-item__time">・{formatRelativeTime(comment.createdAt)}</span>
         </div>
         <p className="comment-item__text">{comment.body}</p>

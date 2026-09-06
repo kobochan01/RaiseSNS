@@ -9,6 +9,7 @@ import com.raisesns.backend.entity.Post;
 import com.raisesns.backend.entity.User;
 import com.raisesns.backend.exception.PostAccessDeniedException;
 import com.raisesns.backend.exception.PostNotFoundException;
+import com.raisesns.backend.exception.UserNotFoundException;
 import com.raisesns.backend.mapper.CommentMapper;
 import com.raisesns.backend.mapper.LikeMapper;
 import com.raisesns.backend.mapper.PostCountRow;
@@ -112,6 +113,20 @@ public class PostService {
 
         List<PostFeedRow> rows = postMapper.findNewerThan(sinceId, MAX_LIMIT);
         return toPostResponses(currentUserId, rows);
+    }
+
+    public TimelineResponse getUserPosts(Long currentUserId, String username, Long cursor, Integer limit) {
+        User target = userMapper.findByUsername(username).orElseThrow(() -> new UserNotFoundException(username));
+
+        int normalizedLimit = normalizeLimit(limit);
+        List<PostFeedRow> rows = postMapper.findByUserId(target.getId(), cursor, normalizedLimit + 1);
+
+        boolean hasMore = rows.size() > normalizedLimit;
+        List<PostFeedRow> pageRows = hasMore ? rows.subList(0, normalizedLimit) : rows;
+        Long nextCursor = hasMore ? pageRows.get(pageRows.size() - 1).getId() : null;
+
+        List<PostResponse> posts = toPostResponses(currentUserId, pageRows);
+        return new TimelineResponse(posts, nextCursor);
     }
 
     // 投稿1件ごとにいいね/コメント数を問い合わせるとN+1になるため、対象投稿IDをまとめてバッチ集計する

@@ -1,8 +1,14 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { render as rtlRender, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import type { ReactElement } from 'react'
+import { MemoryRouter } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { createComment, deleteComment, type Comment } from '../api/comments'
 import { CommentItem } from './CommentItem'
+
+function render(ui: ReactElement) {
+  return rtlRender(ui, { wrapper: MemoryRouter })
+}
 
 vi.mock('../api/comments', () => ({
   createComment: vi.fn(),
@@ -47,6 +53,22 @@ describe('CommentItem', () => {
     expect(screen.getByText('花子')).toBeInTheDocument()
     expect(screen.getByText('@hanako')).toBeInTheDocument()
     expect(screen.getByText('いいですね')).toBeInTheDocument()
+  })
+
+  it('links the author name and username to the profile page', () => {
+    render(
+      <CommentItem
+        comment={makeComment()}
+        postId={1}
+        currentUserId={999}
+        depth={0}
+        onDeleted={onDeleted}
+        onReplyCreated={onReplyCreated}
+      />,
+    )
+
+    expect(screen.getByText('花子')).toHaveAttribute('href', '/profile/hanako')
+    expect(screen.getByText('@hanako')).toHaveAttribute('href', '/profile/hanako')
   })
 
   it('does not show a delete button when the current user is not the author', () => {

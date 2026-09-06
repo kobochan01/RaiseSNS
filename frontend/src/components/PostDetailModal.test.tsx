@@ -1,10 +1,16 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { render as rtlRender, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import type { ReactElement } from 'react'
+import { MemoryRouter } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { createComment, getComments, type Comment } from '../api/comments'
 import { likePost } from '../api/likes'
 import type { Post } from '../api/posts'
 import { PostDetailModal } from './PostDetailModal'
+
+function render(ui: ReactElement) {
+  return rtlRender(ui, { wrapper: MemoryRouter })
+}
 
 vi.mock('../api/comments', () => ({
   getComments: vi.fn(),

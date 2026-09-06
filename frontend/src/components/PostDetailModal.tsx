@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { createComment, getComments, type Comment } from '../api/comments'
 import type { Post } from '../api/posts'
 import { avatarColor } from '../utils/avatar'
@@ -96,8 +97,12 @@ export function PostDetailModal({ post, currentUserId, onClose, onUpdated }: Pro
             {post.author.displayName.charAt(0)}
           </div>
           <div className="post-card__head">
-            <span className="post-card__name">{post.author.displayName}</span>
-            <span className="post-card__username">@{post.author.username}</span>
+            <Link to={`/profile/${post.author.username}`} className="post-card__name">
+              {post.author.displayName}
+            </Link>
+            <Link to={`/profile/${post.author.username}`} className="post-card__username">
+              @{post.author.username}
+            </Link>
             <span className="post-card__time">・{formatRelativeTime(post.createdAt)}</span>
           </div>
         </div>

@@ -1,9 +1,15 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { render as rtlRender, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import type { ReactElement } from 'react'
+import { MemoryRouter } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { deletePost, updatePost, type Post } from '../api/posts'
 import { likePost, unlikePost } from '../api/likes'
 import { PostCard } from './PostCard'
+
+function render(ui: ReactElement) {
+  return rtlRender(ui, { wrapper: MemoryRouter })
+}
 
 vi.mock('../api/posts', () => ({
   updatePost: vi.fn(),
@@ -52,6 +58,13 @@ describe('PostCard', () => {
     expect(screen.getByText('太郎')).toBeInTheDocument()
     expect(screen.getByText('@taro')).toBeInTheDocument()
     expect(screen.getByText('元の本文')).toBeInTheDocument()
+  })
+
+  it('links the author name and username to the profile page', () => {
+    render(<PostCard post={basePost} currentUserId={999} onUpdated={onUpdated} onDeleted={onDeleted} onOpenDetail={onOpenDetail} />)
+
+    expect(screen.getByText('太郎')).toHaveAttribute('href', '/profile/taro')
+    expect(screen.getByText('@taro')).toHaveAttribute('href', '/profile/taro')
   })
 
   it('does not show edit/delete links when the current user is not the author', () => {
