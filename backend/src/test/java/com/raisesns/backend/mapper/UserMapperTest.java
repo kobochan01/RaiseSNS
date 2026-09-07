@@ -120,10 +120,24 @@ class UserMapperTest extends AbstractIntegrationTest {
         userMapper.insert(user);
 
         LocalDateTime updatedAt = LocalDateTime.now().plusMinutes(1);
-        userMapper.updateProfile(user.getId(), "新しい表示名", "新しい自己紹介", updatedAt);
+        userMapper.updateProfile(user.getId(), "新しい表示名", "新しい自己紹介", null, updatedAt);
 
         User found = userMapper.findById(user.getId()).orElseThrow();
         assertThat(found.getDisplayName()).isEqualTo("新しい表示名");
         assertThat(found.getBio()).isEqualTo("新しい自己紹介");
+    }
+
+    @Test
+    void updateProfileChangesAvatarUrl() {
+        User user = newUser("ivan", "ivan@example.com");
+        userMapper.insert(user);
+
+        LocalDateTime updatedAt = LocalDateTime.now().plusMinutes(1);
+        userMapper.updateProfile(user.getId(), "表示名", null, "https://example-bucket.s3.ap-northeast-1.amazonaws.com/avatars/abc.png",
+                updatedAt);
+
+        User found = userMapper.findById(user.getId()).orElseThrow();
+        assertThat(found.getAvatarUrl())
+                .isEqualTo("https://example-bucket.s3.ap-northeast-1.amazonaws.com/avatars/abc.png");
     }
 }

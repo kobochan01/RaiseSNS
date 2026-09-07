@@ -16,8 +16,8 @@ import java.util.Optional;
 public interface PostMapper {
 
     @Insert("""
-            INSERT INTO posts (user_id, body, created_at, updated_at)
-            VALUES (#{userId}, #{body}, #{createdAt}, #{updatedAt})
+            INSERT INTO posts (user_id, body, image_url, created_at, updated_at)
+            VALUES (#{userId}, #{body}, #{imageUrl}, #{createdAt}, #{updatedAt})
             """)
     @Options(useGeneratedKeys = true, keyProperty = "id")
     void insert(Post post);

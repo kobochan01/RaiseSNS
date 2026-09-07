@@ -3,10 +3,10 @@ import { Link, useParams } from 'react-router-dom'
 import { followUser, unfollowUser } from '../api/follows'
 import type { Post } from '../api/posts'
 import { getProfile, getUserPosts, type Profile } from '../api/users'
+import { Avatar } from '../components/Avatar'
 import { PostCard } from '../components/PostCard'
 import { PostDetailModal } from '../components/PostDetailModal'
 import { useAuth } from '../context/AuthContext'
-import { avatarColor } from '../utils/avatar'
 
 export function ProfilePage() {
   const { username } = useParams<{ username: string }>()
@@ -84,9 +84,7 @@ export function ProfilePage() {
       </Link>
       <div className="profile-header">
         <div className="profile-top">
-          <div className="avatar avatar--lg" style={{ backgroundColor: avatarColor(profile.id) }}>
-            {profile.displayName.charAt(0)}
-          </div>
+          <Avatar userId={profile.id} displayName={profile.displayName} avatarUrl={profile.avatarUrl} size="lg" />
           {isSelf ? (
             <Link to={`/profile/${profile.username}/edit`} className="btn btn--outline btn--sm">
               編集

@@ -205,6 +205,28 @@ button {
   color: var(--color-accent);
 }
 
+.search-form {
+  display: flex;
+  flex: 1;
+  gap: 6px;
+  margin: 0 12px;
+}
+
+.search-input {
+  flex: 1;
+  min-width: 0;
+  padding: 8px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  background-color: var(--color-bg-secondary);
+  font-size: 14px;
+}
+
+.search-input:focus {
+  outline: 2px solid var(--color-accent);
+  background-color: var(--color-bg);
+}
+
 .tabs {
   display: flex;
   border-bottom: 1px solid var(--color-border);
@@ -284,6 +306,53 @@ button {
   display: flex;
   justify-content: flex-end;
   margin-top: 8px;
+}
+
+.post-create__toolbar {
+  display: flex;
+  align-items: center;
+  margin-top: 8px;
+}
+
+.file-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  color: var(--color-accent);
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.file-label input[type='file'] {
+  display: none;
+}
+
+.image-preview-wrap {
+  position: relative;
+  margin: 10px 0;
+}
+
+.image-preview {
+  width: 100%;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  max-height: 280px;
+  object-fit: cover;
+}
+
+.image-remove-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background-color: rgba(15, 20, 25, 0.75);
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  cursor: pointer;
+  font-size: 14px;
 }
 
 .field-meta {
@@ -379,6 +448,15 @@ button {
   font-size: 15px;
   white-space: pre-wrap;
   overflow-wrap: break-word;
+}
+
+.post-card__image {
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  margin-top: 8px;
+  max-height: 320px;
+  width: 100%;
+  object-fit: cover;
 }
 
 .post-card__owner-actions {
@@ -679,6 +757,13 @@ button {
 .user-row__username {
   color: var(--color-text-secondary);
   font-size: 13px;
+}
+
+.search-result-count {
+  padding: 12px 16px;
+  color: var(--color-text-secondary);
+  font-size: 14px;
+  border-bottom: 1px solid var(--color-border);
 }
 
 .comment-form__textarea {

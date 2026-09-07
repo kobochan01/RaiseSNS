@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
 import { getFollowers, getFollowing, type UserSummary } from '../api/follows'
-import { avatarColor } from '../utils/avatar'
+import { Avatar } from '../components/Avatar'
 
 type Tab = 'following' | 'followers'
 
@@ -69,9 +69,7 @@ export function FollowListPage() {
       )}
       {users.map((row) => (
         <Link key={row.id} to={`/profile/${row.username}`} className="user-row">
-          <div className="avatar avatar--md" style={{ backgroundColor: avatarColor(row.id) }}>
-            {row.displayName.charAt(0)}
-          </div>
+          <Avatar userId={row.id} displayName={row.displayName} avatarUrl={row.avatarUrl} />
           <div className="user-row__info">
             <div className="user-row__name">{row.displayName}</div>
             <div className="user-row__username">@{row.username}</div>
