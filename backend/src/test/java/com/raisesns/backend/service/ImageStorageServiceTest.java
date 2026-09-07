@@ -5,6 +5,7 @@ import com.raisesns.backend.exception.ImageUploadFailedException;
 import com.raisesns.backend.exception.InvalidImageException;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockMultipartFile;
+import software.amazon.awssdk.core.exception.SdkClientException;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
@@ -80,6 +81,18 @@ class ImageStorageServiceTest {
                 .thenThrow(S3Exception.builder().message("boom").build());
 
         assertThatThrownBy(() -> imageStorageService.uploadPostImage(file))
+                .isInstanceOf(ImageUploadFailedException.class);
+    }
+
+    @Test
+    void throwsImageUploadFailedExceptionWhenBucketIsNotConfigured() {
+        ImageStorageService serviceWithoutBucket =
+                new ImageStorageService(s3Client, new S3Properties("", "ap-northeast-1"));
+        MockMultipartFile file = new MockMultipartFile("image", "photo.png", "image/png", new byte[]{1, 2, 3});
+        when(s3Client.putObject(any(PutObjectRequest.class), any(RequestBody.class)))
+                .thenThrow(SdkClientException.create("Bucket cannot be empty."));
+
+        assertThatThrownBy(() -> serviceWithoutBucket.uploadPostImage(file))
                 .isInstanceOf(ImageUploadFailedException.class);
     }
 }

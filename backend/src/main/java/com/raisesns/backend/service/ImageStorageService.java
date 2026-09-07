@@ -5,10 +5,10 @@ import com.raisesns.backend.exception.ImageUploadFailedException;
 import com.raisesns.backend.exception.InvalidImageException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import software.amazon.awssdk.core.exception.SdkException;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
-import software.amazon.awssdk.services.s3.model.S3Exception;
 
 import java.io.IOException;
 import java.util.Locale;
@@ -54,7 +54,7 @@ public class ImageStorageService {
                             .contentType(file.getContentType())
                             .build(),
                     RequestBody.fromInputStream(file.getInputStream(), file.getSize()));
-        } catch (IOException | S3Exception e) {
+        } catch (IOException | SdkException e) {
             throw new ImageUploadFailedException(e);
         }
 
