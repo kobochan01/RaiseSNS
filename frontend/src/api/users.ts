@@ -12,7 +12,7 @@ export type Profile = {
   isFollowedByMe: boolean
 }
 
-export type UpdateProfileRequest = { displayName: string; bio: string | null }
+export type UpdateProfileRequest = { displayName: string; bio: string | null; avatarUrl?: string | null }
 
 export function getProfile(username: string): Promise<Profile> {
   return apiFetch(`/users/${username}`)

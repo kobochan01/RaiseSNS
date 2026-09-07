@@ -109,6 +109,19 @@ class UserControllerTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void updateProfileReturns200AndUpdatesAvatarUrl() throws Exception {
+        Cookie ownerToken = registerAndLogin("owner4", "owner4@example.com");
+
+        mockMvc.perform(put("/api/users/owner4")
+                        .cookie(ownerToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(new UpdateProfileRequest("新しい表示名", "新しい自己紹介",
+                                "https://example-bucket.s3.ap-northeast-1.amazonaws.com/avatars/a.png"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.avatarUrl").value("https://example-bucket.s3.ap-northeast-1.amazonaws.com/avatars/a.png"));
+    }
+
+    @Test
     void updateProfileReturns403WhenRequesterIsNotOwner() throws Exception {
         Cookie ownerToken = registerAndLogin("owner2", "owner2@example.com");
         Cookie otherToken = registerAndLogin("other2", "other2@example.com");

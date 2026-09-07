@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { deletePost, updatePost, type Post } from '../api/posts'
-import { avatarColor } from '../utils/avatar'
 import { formatRelativeTime } from '../utils/time'
+import { Avatar } from './Avatar'
 import { LikeButton } from './LikeButton'
 
 const MAX_BODY_LENGTH = 280
@@ -71,9 +71,7 @@ export function PostCard({ post, currentUserId, onUpdated, onDeleted, onOpenDeta
 
   return (
     <article className="post-card" onClick={handleCardClick}>
-      <div className="avatar avatar--md" style={{ backgroundColor: avatarColor(post.author.id) }}>
-        {post.author.displayName.charAt(0)}
-      </div>
+      <Avatar userId={post.author.id} displayName={post.author.displayName} avatarUrl={post.author.avatarUrl} />
       <div className="post-card__body">
         <div className="post-card__head">
           <Link
@@ -122,7 +120,10 @@ export function PostCard({ post, currentUserId, onUpdated, onDeleted, onOpenDeta
             </div>
           </div>
         ) : (
-          <p className="post-card__text">{post.body}</p>
+          <>
+            <p className="post-card__text">{post.body}</p>
+            {post.imageUrl && <img className="post-card__image" src={post.imageUrl} alt="投稿画像" />}
+          </>
         )}
         <div className="post-card__actions">
           <LikeButton

@@ -2,8 +2,8 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { createComment, getComments, type Comment } from '../api/comments'
 import type { Post } from '../api/posts'
-import { avatarColor } from '../utils/avatar'
 import { formatRelativeTime } from '../utils/time'
+import { Avatar } from './Avatar'
 import { CommentItem } from './CommentItem'
 import { LikeButton } from './LikeButton'
 import { Modal } from './Modal'
@@ -93,9 +93,7 @@ export function PostDetailModal({ post, currentUserId, onClose, onUpdated }: Pro
       </div>
       <div className="modal-body">
         <div className="post-detail__head">
-          <div className="avatar avatar--md" style={{ backgroundColor: avatarColor(post.author.id) }}>
-            {post.author.displayName.charAt(0)}
-          </div>
+          <Avatar userId={post.author.id} displayName={post.author.displayName} avatarUrl={post.author.avatarUrl} />
           <div className="post-card__head">
             <Link to={`/profile/${post.author.username}`} className="post-card__name">
               {post.author.displayName}

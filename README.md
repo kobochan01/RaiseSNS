@@ -13,11 +13,11 @@ X（旧Twitter）のタイムライン形式を模した、学習目的の SNS �
 | フォロー中タイムライン表示 | 未着手 |
 | ユーザー検索 | 未着手 |
 | フォロー／フォロー解除 | 完了 |
-| 投稿作成・編集・削除 | 完了(テキストのみ、画像は未着手) |
+| 投稿作成・編集・削除 | 完了(画像添付は任意) |
 | コメント作成・削除・返信(ネスト) | 完了 |
 | いいね・いいね解除 | 完了 |
-| 画像投稿 | 未着手 |
-| プロフィール編集・閲覧 | 完了(アイコン画像アップロードは未着手) |
+| 画像投稿 | 完了 |
+| プロフィール編集・閲覧 | 完了(アイコン画像アップロード含む) |
 
 ## 技術スタック
 
@@ -40,6 +40,51 @@ X（旧Twitter）のタイムライン形式を模した、学習目的の SNS �
 npm install
 
 # 起動はCLAUDE.mdの「環境・起動」を参照
+```
+
+### AWS S3のセットアップ（画像アップロード機能に必要）
+
+画像投稿・プロフィールアイコンのアップロード先として、実際のAWS S3バケットを使用します。以下はユーザー自身のAWSアカウントで一度だけ行う手順です。
+
+```bash
+# 1. S3バケットを作成
+aws s3 mb s3://<バケット名> --region ap-northeast-1
+
+# 2. パブリックアクセスブロックを一部解除（バケットポリシーでの公開を許可するため）
+aws s3api put-public-access-block --bucket <バケット名> --public-access-block-configuration \
+  BlockPublicAcls=false,IgnorePublicAcls=false,BlockPublicPolicy=false,RestrictPublicBuckets=false
+
+# 3. posts/・avatars/ 配下を公開読み取り可能にするバケットポリシーを設定
+cat <<'EOF' > bucket-policy.json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "PublicReadImages",
+      "Effect": "Allow",
+      "Principal": "*",
+      "Action": "s3:GetObject",
+      "Resource": [
+        "arn:aws:s3:::<バケット名>/posts/*",
+        "arn:aws:s3:::<バケット名>/avatars/*"
+      ]
+    }
+  ]
+}
+EOF
+aws s3api put-bucket-policy --bucket <バケット名> --policy file://bucket-policy.json
+
+# 4. アプリ用IAMユーザーを作成し、PutObjectのみを許可する最小権限ポリシーをアタッチ
+#    （s3:GetObjectは上記でパブリックにしているため不要）
+```
+
+発行したアクセスキーを `.env` の以下の項目に設定してください（`.env` はgitignore対象）。
+
+```
+AWS_ACCESS_KEY_ID=<発行したアクセスキーID>
+AWS_SECRET_ACCESS_KEY=<発行したシークレットキー>
+AWS_REGION=ap-northeast-1
+AWS_S3_BUCKET=<バケット名>
 ```
 
 ## ドキュメント

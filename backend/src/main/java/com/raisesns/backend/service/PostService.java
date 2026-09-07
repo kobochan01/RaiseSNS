@@ -51,6 +51,7 @@ public class PostService {
         Post post = Post.builder()
                 .userId(userId)
                 .body(request.body())
+                .imageUrl(request.imageUrl())
                 .createdAt(now)
                 .updatedAt(now)
                 .build();

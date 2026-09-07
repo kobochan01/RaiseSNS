@@ -77,6 +77,19 @@ class PostControllerTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void createReturns201WithImageUrlWhenProvided() throws Exception {
+        Cookie accessToken = registerAndLogin("poster3", "poster3@example.com");
+
+        mockMvc.perform(post("/api/posts")
+                        .cookie(accessToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(
+                                new CreatePostRequest("画像付き投稿", "https://example-bucket.s3.ap-northeast-1.amazonaws.com/posts/a.png"))))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.imageUrl").value("https://example-bucket.s3.ap-northeast-1.amazonaws.com/posts/a.png"));
+    }
+
+    @Test
     void createReturns401WhenNotAuthenticated() throws Exception {
         mockMvc.perform(post("/api/posts")
                         .contentType(MediaType.APPLICATION_JSON)
