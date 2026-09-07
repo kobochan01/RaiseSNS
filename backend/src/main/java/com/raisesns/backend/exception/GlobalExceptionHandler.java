@@ -77,4 +77,9 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleSelfFollow(SelfFollowException ex) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ErrorResponse(ex.getMessage(), null));
     }
+
+    @ExceptionHandler(BlankSearchKeywordException.class)
+    public ResponseEntity<ErrorResponse> handleBlankSearchKeyword(BlankSearchKeywordException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ErrorResponse(ex.getMessage(), null));
+    }
 }

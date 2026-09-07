@@ -3,6 +3,7 @@ package com.raisesns.backend.controller;
 import com.raisesns.backend.dto.request.UpdateProfileRequest;
 import com.raisesns.backend.dto.response.ProfileResponse;
 import com.raisesns.backend.dto.response.TimelineResponse;
+import com.raisesns.backend.dto.response.UserSearchResponse;
 import com.raisesns.backend.service.PostService;
 import com.raisesns.backend.service.UserService;
 import jakarta.validation.Valid;
@@ -26,6 +27,13 @@ public class UserController {
     public UserController(UserService userService, PostService postService) {
         this.userService = userService;
         this.postService = postService;
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<UserSearchResponse> searchUsers(@RequestParam String keyword,
+                                                            @RequestParam(required = false) Integer limit,
+                                                            @RequestParam(required = false) Integer offset) {
+        return ResponseEntity.ok(userService.searchUsers(keyword, limit, offset));
     }
 
     @GetMapping("/{username}")

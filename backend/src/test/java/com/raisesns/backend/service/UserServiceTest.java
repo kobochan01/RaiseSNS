@@ -2,7 +2,9 @@ package com.raisesns.backend.service;
 
 import com.raisesns.backend.dto.request.UpdateProfileRequest;
 import com.raisesns.backend.dto.response.ProfileResponse;
+import com.raisesns.backend.dto.response.UserSearchResponse;
 import com.raisesns.backend.entity.User;
+import com.raisesns.backend.exception.BlankSearchKeywordException;
 import com.raisesns.backend.exception.ProfileAccessDeniedException;
 import com.raisesns.backend.exception.UserNotFoundException;
 import com.raisesns.backend.mapper.FollowMapper;
@@ -10,11 +12,13 @@ import com.raisesns.backend.mapper.UserMapper;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -84,5 +88,40 @@ class UserServiceTest {
 
         assertThatThrownBy(() -> userService.updateProfile(1L, "nobody", new UpdateProfileRequest("名前", null)))
                 .isInstanceOf(UserNotFoundException.class);
+    }
+
+    @Test
+    void searchUsersReturnsResultsAndTotalCount() {
+        when(userMapper.searchByUsername("tar", 20, 0)).thenReturn(List.of(existingUser(1L, "taro")));
+        when(userMapper.countByUsernameContaining("tar")).thenReturn(1);
+
+        UserSearchResponse response = userService.searchUsers("tar", null, null);
+
+        assertThat(response.results()).hasSize(1);
+        assertThat(response.results().get(0).username()).isEqualTo("taro");
+        assertThat(response.totalCount()).isEqualTo(1);
+    }
+
+    @Test
+    void searchUsersClampsLimitToMaximum() {
+        when(userMapper.searchByUsername("tar", 50, 0)).thenReturn(List.of());
+        when(userMapper.countByUsernameContaining("tar")).thenReturn(0);
+
+        userService.searchUsers("tar", 1000, null);
+
+        verify(userMapper).searchByUsername("tar", 50, 0);
+    }
+
+    @Test
+    void searchUsersThrowsWhenKeywordIsBlank() {
+        assertThatThrownBy(() -> userService.searchUsers("  ", null, null))
+                .isInstanceOf(BlankSearchKeywordException.class);
+        verify(userMapper, never()).searchByUsername(anyString(), anyInt(), anyInt());
+    }
+
+    @Test
+    void searchUsersThrowsWhenKeywordIsNull() {
+        assertThatThrownBy(() -> userService.searchUsers(null, null, null))
+                .isInstanceOf(BlankSearchKeywordException.class);
     }
 }

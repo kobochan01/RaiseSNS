@@ -151,4 +151,31 @@ class UserControllerTest extends AbstractIntegrationTest {
                 .andExpect(jsonPath("$.posts.length()").value(1))
                 .andExpect(jsonPath("$.posts[0].body").value("自分の投稿"));
     }
+
+    @Test
+    void searchUsersReturns200WithCaseInsensitivePartialMatches() throws Exception {
+        Cookie viewerToken = registerAndLogin("searcher1", "searcher1@example.com");
+        registerAndLogin("kobochanTaro", "kobochantaro@example.com");
+        registerAndLogin("unrelated1", "unrelated1@example.com");
+
+        mockMvc.perform(get("/api/users/search").cookie(viewerToken).param("keyword", "KOBOCHAN"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.results.length()").value(1))
+                .andExpect(jsonPath("$.results[0].username").value("kobochanTaro"))
+                .andExpect(jsonPath("$.totalCount").value(1));
+    }
+
+    @Test
+    void searchUsersReturns400WhenKeywordIsBlank() throws Exception {
+        Cookie viewerToken = registerAndLogin("searcher2", "searcher2@example.com");
+
+        mockMvc.perform(get("/api/users/search").cookie(viewerToken).param("keyword", " "))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void searchUsersReturns401WhenNotAuthenticated() throws Exception {
+        mockMvc.perform(get("/api/users/search").param("keyword", "taro"))
+                .andExpect(status().isUnauthorized());
+    }
 }

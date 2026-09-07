@@ -1,5 +1,14 @@
 const AVATAR_COLORS = ['#f4b400', '#db4437', '#4285f4', '#0f9d58', '#ab47bc', '#00acc1', '#ff7043', '#9e9d24']
 
-export function avatarColor(userId: number): string {
-  return AVATAR_COLORS[userId % AVATAR_COLORS.length]
+function hashString(value: string): number {
+  let hash = 0
+  for (let i = 0; i < value.length; i++) {
+    hash = (hash * 31 + value.charCodeAt(i)) | 0
+  }
+  return Math.abs(hash)
+}
+
+export function avatarColor(seed: number | string): string {
+  const key = typeof seed === 'number' ? seed : hashString(seed)
+  return AVATAR_COLORS[key % AVATAR_COLORS.length]
 }

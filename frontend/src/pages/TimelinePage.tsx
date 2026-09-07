@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { logout } from '../api/auth'
 import { ApiError } from '../api/client'
@@ -14,6 +14,7 @@ export function TimelinePage() {
   const { user, setUser } = useAuth()
   const navigate = useNavigate()
 
+  const [searchKeyword, setSearchKeyword] = useState('')
   const [activeTab, setActiveTab] = useState<TimelineScope>('all')
   const [posts, setPosts] = useState<Post[]>([])
   const [nextCursor, setNextCursor] = useState<number | null>(null)
@@ -146,10 +147,29 @@ export function TimelinePage() {
     }
   }
 
+  function handleSearchSubmit(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+    const keyword = searchKeyword.trim()
+    if (!keyword) return
+    navigate(`/search?q=${encodeURIComponent(keyword)}`)
+  }
+
   return (
     <div className="timeline-screen">
       <header className="timeline-header">
         <span className="timeline-header__title">RaiseSNS</span>
+        <form className="search-form" onSubmit={handleSearchSubmit}>
+          <input
+            type="search"
+            className="search-input"
+            placeholder="ユーザーを検索(@username)"
+            value={searchKeyword}
+            onChange={(e) => setSearchKeyword(e.target.value)}
+          />
+          <button type="submit" className="btn btn--outline btn--sm">
+            検索
+          </button>
+        </form>
         <button type="button" className="btn btn--outline btn--sm" onClick={handleLogout}>
           ログアウト
         </button>

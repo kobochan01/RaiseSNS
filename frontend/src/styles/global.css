@@ -205,6 +205,28 @@ button {
   color: var(--color-accent);
 }
 
+.search-form {
+  display: flex;
+  flex: 1;
+  gap: 6px;
+  margin: 0 12px;
+}
+
+.search-input {
+  flex: 1;
+  min-width: 0;
+  padding: 8px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  background-color: var(--color-bg-secondary);
+  font-size: 14px;
+}
+
+.search-input:focus {
+  outline: 2px solid var(--color-accent);
+  background-color: var(--color-bg);
+}
+
 .tabs {
   display: flex;
   border-bottom: 1px solid var(--color-border);
@@ -679,6 +701,13 @@ button {
 .user-row__username {
   color: var(--color-text-secondary);
   font-size: 13px;
+}
+
+.search-result-count {
+  padding: 12px 16px;
+  color: var(--color-text-secondary);
+  font-size: 14px;
+  border-bottom: 1px solid var(--color-border);
 }
 
 .comment-form__textarea {
