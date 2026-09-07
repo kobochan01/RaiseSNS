@@ -38,11 +38,12 @@ public interface UserMapper {
     Optional<User> findByUsername(String username);
 
     @Update("""
-            UPDATE users SET display_name = #{displayName}, bio = #{bio}, updated_at = #{updatedAt}
+            UPDATE users SET display_name = #{displayName}, bio = #{bio}, avatar_url = #{avatarUrl}, updated_at = #{updatedAt}
             WHERE id = #{id}
             """)
     void updateProfile(@Param("id") Long id, @Param("displayName") String displayName,
-                        @Param("bio") String bio, @Param("updatedAt") LocalDateTime updatedAt);
+                        @Param("bio") String bio, @Param("avatarUrl") String avatarUrl,
+                        @Param("updatedAt") LocalDateTime updatedAt);
 
     @Select("""
             SELECT * FROM users

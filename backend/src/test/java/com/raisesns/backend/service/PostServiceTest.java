@@ -81,6 +81,20 @@ class PostServiceTest {
     }
 
     @Test
+    void createSavesImageUrlWhenProvided() {
+        when(userMapper.findById(5L)).thenReturn(Optional.of(author(5L)));
+
+        PostResponse response = postService.create(5L,
+                new CreatePostRequest("画像付き投稿", "https://example-bucket.s3.ap-northeast-1.amazonaws.com/posts/a.png"));
+
+        assertThat(response.imageUrl()).isEqualTo("https://example-bucket.s3.ap-northeast-1.amazonaws.com/posts/a.png");
+
+        ArgumentCaptor<Post> captor = ArgumentCaptor.forClass(Post.class);
+        verify(postMapper).insert(captor.capture());
+        assertThat(captor.getValue().getImageUrl()).isEqualTo("https://example-bucket.s3.ap-northeast-1.amazonaws.com/posts/a.png");
+    }
+
+    @Test
     void updateSucceedsWhenRequesterIsOwner() {
         Post post = existingPost(1L, 5L, "元の本文");
         when(postMapper.findById(1L)).thenReturn(Optional.of(post));

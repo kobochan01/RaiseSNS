@@ -1,8 +1,8 @@
 import { useState, type CSSProperties } from 'react'
 import { Link } from 'react-router-dom'
 import { createComment, deleteComment, type Comment } from '../api/comments'
-import { avatarColor } from '../utils/avatar'
 import { formatRelativeTime } from '../utils/time'
+import { Avatar } from './Avatar'
 
 const MAX_BODY_LENGTH = 140
 
@@ -56,9 +56,7 @@ export function CommentItem({ comment, postId, currentUserId, depth, onDeleted, 
 
   return (
     <div className="comment-item" style={{ '--depth': depth } as CSSProperties}>
-      <div className="avatar avatar--sm" style={{ backgroundColor: avatarColor(comment.author.id) }}>
-        {comment.author.displayName.charAt(0)}
-      </div>
+      <Avatar userId={comment.author.id} displayName={comment.author.displayName} avatarUrl={comment.author.avatarUrl} size="sm" />
       <div className="comment-item__body">
         <div className="comment-item__head">
           <Link to={`/profile/${comment.author.username}`} className="comment-item__name">

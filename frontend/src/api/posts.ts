@@ -26,7 +26,7 @@ export type TimelineResponse = {
   nextCursor: number | null
 }
 
-export type CreatePostRequest = { body: string }
+export type CreatePostRequest = { body: string; imageUrl?: string | null }
 export type UpdatePostRequest = { body: string }
 
 export function getTimeline(

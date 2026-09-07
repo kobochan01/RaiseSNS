@@ -82,4 +82,14 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleBlankSearchKeyword(BlankSearchKeywordException ex) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ErrorResponse(ex.getMessage(), null));
     }
+
+    @ExceptionHandler(InvalidImageException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidImage(InvalidImageException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ErrorResponse(ex.getMessage(), null));
+    }
+
+    @ExceptionHandler(ImageUploadFailedException.class)
+    public ResponseEntity<ErrorResponse> handleImageUploadFailed(ImageUploadFailedException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(new ErrorResponse(ex.getMessage(), null));
+    }
 }

@@ -43,7 +43,8 @@ public class UserService {
             throw new ProfileAccessDeniedException();
         }
 
-        userMapper.updateProfile(target.getId(), request.displayName(), request.bio(), LocalDateTime.now());
+        userMapper.updateProfile(target.getId(), request.displayName(), request.bio(), request.avatarUrl(),
+                LocalDateTime.now());
         User updated = findByUsername(username);
         return toProfileResponse(userId, updated);
     }

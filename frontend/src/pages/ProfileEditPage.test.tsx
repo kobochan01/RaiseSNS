@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { useEffect } from 'react'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { uploadImage } from '../api/images'
 import { getProfile, updateProfile, type Profile } from '../api/users'
 import { AuthProvider, useAuth, type AuthUser } from '../context/AuthContext'
 import { ProfileEditPage } from './ProfileEditPage'
@@ -17,6 +18,10 @@ vi.mock('react-router-dom', async () => {
 vi.mock('../api/users', () => ({
   getProfile: vi.fn(),
   updateProfile: vi.fn(),
+}))
+
+vi.mock('../api/images', () => ({
+  uploadImage: vi.fn(),
 }))
 
 const currentUser: AuthUser = { id: 1, username: 'taro', displayName: '太郎', avatarUrl: null }
@@ -61,6 +66,7 @@ describe('ProfileEditPage', () => {
     mockNavigate.mockClear()
     vi.mocked(getProfile).mockReset()
     vi.mocked(updateProfile).mockReset()
+    vi.mocked(uploadImage).mockReset()
   })
 
   afterEach(() => {
@@ -92,8 +98,35 @@ describe('ProfileEditPage', () => {
     await userEvent.type(nameInput, '新しい太郎')
     await userEvent.click(screen.getByRole('button', { name: '保存' }))
 
-    await waitFor(() => expect(updateProfile).toHaveBeenCalledWith('taro', { displayName: '新しい太郎', bio: '自己紹介文' }))
+    await waitFor(() =>
+      expect(updateProfile).toHaveBeenCalledWith('taro', { displayName: '新しい太郎', bio: '自己紹介文', avatarUrl: null }),
+    )
     await waitFor(() => expect(mockNavigate).toHaveBeenCalledWith('/profile/taro'))
+  })
+
+  it('uploads a selected avatar image and includes its URL when saving', async () => {
+    vi.mocked(getProfile).mockResolvedValue(makeProfile())
+    vi.mocked(uploadImage).mockResolvedValue({ imageUrl: 'https://example-bucket.s3.ap-northeast-1.amazonaws.com/avatars/a.png' })
+    vi.mocked(updateProfile).mockResolvedValue(makeProfile({ avatarUrl: 'https://example-bucket.s3.ap-northeast-1.amazonaws.com/avatars/a.png' }))
+
+    renderEditPage('/profile/taro/edit')
+    await screen.findByDisplayValue('太郎')
+
+    const file = new File(['dummy'], 'avatar.png', { type: 'image/png' })
+    const input = document.querySelector('.file-label input[type="file"]') as HTMLInputElement
+    await userEvent.upload(input, file)
+
+    await waitFor(() => expect(uploadImage).toHaveBeenCalledWith(file, 'avatar'))
+
+    await userEvent.click(screen.getByRole('button', { name: '保存' }))
+
+    await waitFor(() =>
+      expect(updateProfile).toHaveBeenCalledWith('taro', {
+        displayName: '太郎',
+        bio: '自己紹介文',
+        avatarUrl: 'https://example-bucket.s3.ap-northeast-1.amazonaws.com/avatars/a.png',
+      }),
+    )
   })
 
   it('disables save when the display name is blank', async () => {

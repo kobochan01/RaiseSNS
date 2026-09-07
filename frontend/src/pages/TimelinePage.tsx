@@ -1,7 +1,8 @@
-import { useEffect, useRef, useState, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { logout } from '../api/auth'
 import { ApiError } from '../api/client'
+import { uploadImage } from '../api/images'
 import { createPost, getTimeline, type Post, type TimelineScope } from '../api/posts'
 import { PostCard } from '../components/PostCard'
 import { PostDetailModal } from '../components/PostDetailModal'
@@ -9,6 +10,8 @@ import { useAuth } from '../context/AuthContext'
 
 const MAX_BODY_LENGTH = 280
 const POLL_INTERVAL_MS = 30000
+const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024
+const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
 
 export function TimelinePage() {
   const { user, setUser } = useAuth()
@@ -27,6 +30,9 @@ export function TimelinePage() {
   const [newBody, setNewBody] = useState('')
   const [creating, setCreating] = useState(false)
   const [createError, setCreateError] = useState<string | null>(null)
+  const [newImageUrl, setNewImageUrl] = useState<string | null>(null)
+  const [newImagePreview, setNewImagePreview] = useState<string | null>(null)
+  const [uploadingImage, setUploadingImage] = useState(false)
 
   const [selectedPostId, setSelectedPostId] = useState<number | null>(null)
 
@@ -117,15 +123,50 @@ export function TimelinePage() {
     setCreating(true)
     setCreateError(null)
     try {
-      const post = await createPost({ body })
+      const post = await createPost({ body, imageUrl: newImageUrl })
       setPosts((prev) => [post, ...prev])
       setNewBody('')
+      setNewImageUrl(null)
+      setNewImagePreview(null)
       setShowCreateForm(false)
     } catch (err) {
       setCreateError(err instanceof ApiError ? err.message : '投稿に失敗しました')
     } finally {
       setCreating(false)
     }
+  }
+
+  async function handleImageSelect(e: ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    if (file.size > MAX_IMAGE_SIZE_BYTES) {
+      alert('画像サイズは5MB以下にしてください。')
+      e.target.value = ''
+      return
+    }
+    if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+      alert('jpg・jpeg・png・gif・webp形式のみアップロードできます。')
+      e.target.value = ''
+      return
+    }
+
+    setUploadingImage(true)
+    setCreateError(null)
+    try {
+      const { imageUrl } = await uploadImage(file, 'post')
+      setNewImageUrl(imageUrl)
+      setNewImagePreview(URL.createObjectURL(file))
+    } catch (err) {
+      setCreateError(err instanceof ApiError ? err.message : '画像のアップロードに失敗しました')
+    } finally {
+      setUploadingImage(false)
+      e.target.value = ''
+    }
+  }
+
+  function handleRemoveImage() {
+    setNewImageUrl(null)
+    setNewImagePreview(null)
   }
 
   function handlePostUpdated(updated: Post) {
@@ -213,13 +254,39 @@ export function TimelinePage() {
               {newBody.length} / {MAX_BODY_LENGTH}
             </span>
           </div>
+          {newImagePreview && (
+            <div className="image-preview-wrap">
+              <img className="image-preview" src={newImagePreview} alt="添付画像プレビュー" />
+              <button
+                type="button"
+                className="image-remove-btn"
+                aria-label="画像を削除"
+                onClick={handleRemoveImage}
+              >
+                ×
+              </button>
+            </div>
+          )}
           {createError && <div className="form-error">{createError}</div>}
+          <div className="post-create__toolbar">
+            <label className="file-label">
+              🖼 画像を選択
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/gif,image/webp"
+                onChange={handleImageSelect}
+                disabled={uploadingImage}
+              />
+            </label>
+          </div>
           <div className="post-create__footer">
             <button
               type="button"
               className="btn btn--primary"
               onClick={handleCreateSubmit}
-              disabled={creating || newBody.trim().length === 0 || newBody.length > MAX_BODY_LENGTH}
+              disabled={
+                creating || uploadingImage || newBody.trim().length === 0 || newBody.length > MAX_BODY_LENGTH
+              }
             >
               投稿する
             </button>

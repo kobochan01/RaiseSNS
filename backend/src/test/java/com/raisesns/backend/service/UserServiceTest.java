@@ -69,7 +69,7 @@ class UserServiceTest {
 
         ProfileResponse response = userService.updateProfile(1L, "taro", new UpdateProfileRequest("新しい名前", "新しい自己紹介"));
 
-        verify(userMapper).updateProfile(eq(1L), any(), any(), any());
+        verify(userMapper).updateProfile(eq(1L), any(), any(), any(), any());
         assertThat(response.username()).isEqualTo("taro");
     }
 
@@ -79,7 +79,21 @@ class UserServiceTest {
 
         assertThatThrownBy(() -> userService.updateProfile(999L, "taro", new UpdateProfileRequest("名前", null)))
                 .isInstanceOf(ProfileAccessDeniedException.class);
-        verify(userMapper, never()).updateProfile(anyLong(), anyString(), any(), any());
+        verify(userMapper, never()).updateProfile(anyLong(), anyString(), any(), any(), any());
+    }
+
+    @Test
+    void updateProfilePassesAvatarUrlToMapper() {
+        when(userMapper.findByUsername("taro")).thenReturn(Optional.of(existingUser(1L, "taro")));
+        when(followMapper.countByFolloweeId(1L)).thenReturn(0);
+        when(followMapper.countByFollowerId(1L)).thenReturn(0);
+        when(followMapper.existsByFollowerIdAndFolloweeId(1L, 1L)).thenReturn(false);
+
+        userService.updateProfile(1L, "taro",
+                new UpdateProfileRequest("新しい名前", "新しい自己紹介", "https://example-bucket.s3.ap-northeast-1.amazonaws.com/avatars/a.png"));
+
+        verify(userMapper).updateProfile(eq(1L), any(), any(),
+                eq("https://example-bucket.s3.ap-northeast-1.amazonaws.com/avatars/a.png"), any());
     }
 
     @Test

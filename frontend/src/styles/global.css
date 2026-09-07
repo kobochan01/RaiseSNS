@@ -308,6 +308,53 @@ button {
   margin-top: 8px;
 }
 
+.post-create__toolbar {
+  display: flex;
+  align-items: center;
+  margin-top: 8px;
+}
+
+.file-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  color: var(--color-accent);
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.file-label input[type='file'] {
+  display: none;
+}
+
+.image-preview-wrap {
+  position: relative;
+  margin: 10px 0;
+}
+
+.image-preview {
+  width: 100%;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  max-height: 280px;
+  object-fit: cover;
+}
+
+.image-remove-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background-color: rgba(15, 20, 25, 0.75);
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
 .field-meta {
   display: flex;
   justify-content: space-between;
@@ -401,6 +448,15 @@ button {
   font-size: 15px;
   white-space: pre-wrap;
   overflow-wrap: break-word;
+}
+
+.post-card__image {
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  margin-top: 8px;
+  max-height: 320px;
+  width: 100%;
+  object-fit: cover;
 }
 
 .post-card__owner-actions {

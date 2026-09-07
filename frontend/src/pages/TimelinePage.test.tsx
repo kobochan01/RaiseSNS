@@ -4,6 +4,7 @@ import { useEffect } from 'react'
 import { MemoryRouter } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { logout } from '../api/auth'
+import { uploadImage } from '../api/images'
 import { createPost, getTimeline, type Post, type TimelineResponse } from '../api/posts'
 import { AuthProvider, useAuth, type AuthUser } from '../context/AuthContext'
 import { TimelinePage } from './TimelinePage'
@@ -22,6 +23,10 @@ vi.mock('../api/auth', () => ({
 vi.mock('../api/posts', () => ({
   getTimeline: vi.fn(),
   createPost: vi.fn(),
+}))
+
+vi.mock('../api/images', () => ({
+  uploadImage: vi.fn(),
 }))
 
 class MockIntersectionObserver implements IntersectionObserver {
@@ -81,7 +86,9 @@ describe('TimelinePage', () => {
     vi.mocked(logout).mockReset()
     vi.mocked(getTimeline).mockReset()
     vi.mocked(createPost).mockReset()
+    vi.mocked(uploadImage).mockReset()
     vi.mocked(getTimeline).mockResolvedValue(emptyResponse)
+    URL.createObjectURL = vi.fn(() => 'blob:mock-preview-url')
   })
 
   afterEach(() => {
@@ -150,9 +157,39 @@ describe('TimelinePage', () => {
     await userEvent.type(screen.getByPlaceholderText('今なにしてる?'), '新しい投稿')
     await userEvent.click(screen.getByRole('button', { name: '投稿する' }))
 
-    await waitFor(() => expect(createPost).toHaveBeenCalledWith({ body: '新しい投稿' }))
+    await waitFor(() => expect(createPost).toHaveBeenCalledWith({ body: '新しい投稿', imageUrl: null }))
     expect(await screen.findByText('新しい投稿')).toBeInTheDocument()
     expect(screen.queryByPlaceholderText('今なにしてる?')).not.toBeInTheDocument()
+  })
+
+  it('uploads an attached image and includes its URL when creating a post', async () => {
+    vi.mocked(uploadImage).mockResolvedValue({ imageUrl: 'https://example-bucket.s3.ap-northeast-1.amazonaws.com/posts/a.png' })
+    const created = makePost({
+      id: 999,
+      body: '画像付き投稿',
+      imageUrl: 'https://example-bucket.s3.ap-northeast-1.amazonaws.com/posts/a.png',
+    })
+    vi.mocked(createPost).mockResolvedValue(created)
+    renderTimelinePage()
+    await screen.findByRole('button', { name: '全体' })
+    await userEvent.click(screen.getByRole('button', { name: '＋ 投稿' }))
+    await userEvent.type(screen.getByPlaceholderText('今なにしてる?'), '画像付き投稿')
+
+    const file = new File(['dummy'], 'photo.png', { type: 'image/png' })
+    const input = document.querySelector('.file-label input[type="file"]') as HTMLInputElement
+    await userEvent.upload(input, file)
+
+    expect(await screen.findByAltText('添付画像プレビュー')).toBeInTheDocument()
+    await waitFor(() => expect(uploadImage).toHaveBeenCalledWith(file, 'post'))
+
+    await userEvent.click(screen.getByRole('button', { name: '投稿する' }))
+
+    await waitFor(() =>
+      expect(createPost).toHaveBeenCalledWith({
+        body: '画像付き投稿',
+        imageUrl: 'https://example-bucket.s3.ap-northeast-1.amazonaws.com/posts/a.png',
+      }),
+    )
   })
 
   it('polls for new posts every 30 seconds and shows a notification banner', async () => {

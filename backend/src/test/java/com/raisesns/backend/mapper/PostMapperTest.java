@@ -68,6 +68,22 @@ class PostMapperTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void insertPersistsImageUrl() {
+        Post post = Post.builder()
+                .userId(authorId)
+                .body("画像付き投稿")
+                .imageUrl("https://example-bucket.s3.ap-northeast-1.amazonaws.com/posts/a.png")
+                .createdAt(LocalDateTime.now())
+                .updatedAt(LocalDateTime.now())
+                .build();
+
+        postMapper.insert(post);
+
+        Post found = postMapper.findById(post.getId()).orElseThrow();
+        assertThat(found.getImageUrl()).isEqualTo("https://example-bucket.s3.ap-northeast-1.amazonaws.com/posts/a.png");
+    }
+
+    @Test
     void findByIdReturnsMatchingPost() {
         Post post = newPost("見つかる投稿");
         postMapper.insert(post);
