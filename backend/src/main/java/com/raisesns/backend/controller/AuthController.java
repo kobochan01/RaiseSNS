@@ -9,6 +9,8 @@ import com.raisesns.backend.security.CookieProperties;
 import com.raisesns.backend.security.JwtProperties;
 import com.raisesns.backend.security.RefreshTokenProperties;
 import com.raisesns.backend.service.AuthService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -27,6 +29,7 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/auth")
+@Tag(name = "認証")
 public class AuthController {
 
     private final AuthService authService;
@@ -42,12 +45,14 @@ public class AuthController {
         this.cookieProperties = cookieProperties;
     }
 
+    @Operation(summary = "会員登録")
     @PostMapping("/register")
     public ResponseEntity<RegisterResponse> register(@Valid @RequestBody RegisterRequest request) {
         RegisterResponse response = authService.register(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
+    @Operation(summary = "ログイン")
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
         AuthService.LoginResult result = authService.login(request);
@@ -58,6 +63,7 @@ public class AuthController {
                 .body(result.loginResponse());
     }
 
+    @Operation(summary = "アクセストークン再発行")
     @PostMapping("/refresh")
     public ResponseEntity<LoginResponse> refresh(HttpServletRequest request) {
         String rawRefreshToken = extractCookie(request, cookieProperties.refreshTokenName())
@@ -70,6 +76,7 @@ public class AuthController {
                 .body(result.loginResponse());
     }
 
+    @Operation(summary = "ログアウト")
     @PostMapping("/logout")
     public ResponseEntity<Void> logout(HttpServletRequest request) {
         extractCookie(request, cookieProperties.refreshTokenName()).ifPresent(authService::logout);

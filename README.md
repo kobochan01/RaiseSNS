@@ -87,6 +87,15 @@ AWS_REGION=ap-northeast-1
 AWS_S3_BUCKET=<バケット名>
 ```
 
+## API仕様書
+
+バックエンド起動中、以下のURLからSwagger UI経由でAPI仕様を確認・試行できます。
+
+- Swagger UI: http://localhost:8080/swagger-ui.html
+- OpenAPI JSON: http://localhost:8080/v3/api-docs
+
+Cookie認証が必要なAPIは、先にSwagger UI上で `POST /api/auth/login` を実行してください。同一ブラウザにCookieが発行され、以降のAPIもそのまま試行できます。
+
 ## ドキュメント
 
 - [要件定義書](docs/requirements.md)

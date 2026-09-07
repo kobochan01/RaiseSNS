@@ -22,6 +22,11 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-security'
 	implementation 'org.springframework.boot:spring-boot-starter-validation'
 
+	// Spring Web 6.2.7(Spring Boot 3.5.0同梱)には/swagger-ui/**のパターン結合で
+	// PatternParseExceptionを起こすバグがある(spring-projects/spring-framework#34986、6.2.8で修正)。
+	// springdoc 2.8.15以降はこのバグを誘発するコードに変更されたため、未到達の2.8.13に固定する。
+	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.13'
+
 	implementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter:3.0.4'
 
 	implementation 'org.flywaydb:flyway-core'
