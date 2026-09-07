@@ -92,12 +92,10 @@ public class PostService {
     }
 
     public TimelineResponse getTimeline(Long currentUserId, String scope, Long cursor, Integer limit) {
-        if (SCOPE_FOLLOWING.equals(scope)) {
-            return new TimelineResponse(List.of(), null);
-        }
-
         int normalizedLimit = normalizeLimit(limit);
-        List<PostFeedRow> rows = postMapper.findFeed(cursor, normalizedLimit + 1);
+        List<PostFeedRow> rows = SCOPE_FOLLOWING.equals(scope)
+                ? postMapper.findFollowingFeed(currentUserId, cursor, normalizedLimit + 1)
+                : postMapper.findFeed(cursor, normalizedLimit + 1);
 
         boolean hasMore = rows.size() > normalizedLimit;
         List<PostFeedRow> pageRows = hasMore ? rows.subList(0, normalizedLimit) : rows;
@@ -108,11 +106,9 @@ public class PostService {
     }
 
     public List<PostResponse> getNewPosts(Long currentUserId, String scope, Long sinceId) {
-        if (SCOPE_FOLLOWING.equals(scope)) {
-            return List.of();
-        }
-
-        List<PostFeedRow> rows = postMapper.findNewerThan(sinceId, MAX_LIMIT);
+        List<PostFeedRow> rows = SCOPE_FOLLOWING.equals(scope)
+                ? postMapper.findFollowingNewerThan(currentUserId, sinceId, MAX_LIMIT)
+                : postMapper.findNewerThan(sinceId, MAX_LIMIT);
         return toPostResponses(currentUserId, rows);
     }
 

@@ -31,21 +31,32 @@ class PostMapperTest extends AbstractIntegrationTest {
     @Autowired
     UserMapper userMapper;
 
+    @Autowired
+    FollowMapper followMapper;
+
     private Long authorId;
 
     @BeforeEach
     void setUp() {
+        authorId = insertUser("postauthor", "投稿者");
+    }
+
+    private Long insertUser(String prefix) {
+        return insertUser(prefix, prefix);
+    }
+
+    private Long insertUser(String prefix, String displayName) {
         LocalDateTime now = LocalDateTime.now();
-        User author = User.builder()
-                .username("postauthor" + System.nanoTime())
-                .email("postauthor" + System.nanoTime() + "@example.com")
+        User user = User.builder()
+                .username(prefix + System.nanoTime())
+                .email(prefix + System.nanoTime() + "@example.com")
                 .passwordHash("hashed-password")
-                .displayName("投稿者")
+                .displayName(displayName)
                 .createdAt(now)
                 .updatedAt(now)
                 .build();
-        userMapper.insert(author);
-        authorId = author.getId();
+        userMapper.insert(user);
+        return user.getId();
     }
 
     private Post newPost(String body) {
@@ -252,6 +263,138 @@ class PostMapperTest extends AbstractIntegrationTest {
         postMapper.insert(newPost("2件目"));
 
         List<PostFeedRow> rows = postMapper.findByUserId(authorId, null, 1);
+
+        assertThat(rows).hasSize(1);
+    }
+
+    @Test
+    void findFollowingFeedReturnsOwnPostsWhenFollowingNoOne() {
+        Post own = newPost("フォロー0人でも表示される投稿");
+        postMapper.insert(own);
+
+        List<PostFeedRow> rows = postMapper.findFollowingFeed(authorId, null, 10);
+
+        assertThat(rows).extracting(PostFeedRow::getId).containsExactly(own.getId());
+    }
+
+    @Test
+    void findFollowingFeedIncludesFolloweesPosts() {
+        Long followeeId = insertUser("followee");
+        followMapper.insertIfAbsent(authorId, followeeId, LocalDateTime.now());
+        Post followeePost = Post.builder().userId(followeeId).body("フォロー中ユーザーの投稿")
+                .createdAt(LocalDateTime.now()).updatedAt(LocalDateTime.now()).build();
+        postMapper.insert(followeePost);
+
+        List<PostFeedRow> rows = postMapper.findFollowingFeed(authorId, null, 10);
+
+        assertThat(rows).extracting(PostFeedRow::getId).containsExactly(followeePost.getId());
+    }
+
+    @Test
+    void findFollowingFeedExcludesNonFollowedUsersPosts() {
+        Long strangerId = insertUser("stranger");
+        Post ownPost = newPost("自分の投稿");
+        postMapper.insert(ownPost);
+        Post strangerPost = Post.builder().userId(strangerId).body("無関係な投稿")
+                .createdAt(LocalDateTime.now()).updatedAt(LocalDateTime.now()).build();
+        postMapper.insert(strangerPost);
+
+        List<PostFeedRow> rows = postMapper.findFollowingFeed(authorId, null, 10);
+
+        assertThat(rows).extracting(PostFeedRow::getId).containsExactly(ownPost.getId());
+    }
+
+    @Test
+    void findFollowingFeedOrdersByIdDescendingWithAuthorInfo() {
+        Long followeeId = insertUser("followee");
+        followMapper.insertIfAbsent(authorId, followeeId, LocalDateTime.now());
+        Post first = newPost("1件目");
+        postMapper.insert(first);
+        Post followeePost = Post.builder().userId(followeeId).body("フォロー中ユーザーの投稿")
+                .createdAt(LocalDateTime.now()).updatedAt(LocalDateTime.now()).build();
+        postMapper.insert(followeePost);
+
+        List<PostFeedRow> rows = postMapper.findFollowingFeed(authorId, null, 10);
+
+        assertThat(rows).extracting(PostFeedRow::getId)
+                .containsExactly(followeePost.getId(), first.getId());
+        assertThat(rows.get(0).getAuthorId()).isEqualTo(followeeId);
+    }
+
+    @Test
+    void findFollowingFeedWithCursorReturnsOnlyOlderPosts() {
+        Post first = newPost("1件目");
+        postMapper.insert(first);
+        Post second = newPost("2件目");
+        postMapper.insert(second);
+        Post third = newPost("3件目");
+        postMapper.insert(third);
+
+        List<PostFeedRow> rows = postMapper.findFollowingFeed(authorId, third.getId(), 10);
+
+        assertThat(rows).extracting(PostFeedRow::getId)
+                .containsExactly(second.getId(), first.getId());
+    }
+
+    @Test
+    void findFollowingFeedRespectsLimit() {
+        postMapper.insert(newPost("1件目"));
+        postMapper.insert(newPost("2件目"));
+
+        List<PostFeedRow> rows = postMapper.findFollowingFeed(authorId, null, 1);
+
+        assertThat(rows).hasSize(1);
+    }
+
+    @Test
+    void findFollowingNewerThanReturnsOwnPostsWhenFollowingNoOne() {
+        Post first = newPost("1件目");
+        postMapper.insert(first);
+        Post second = newPost("2件目");
+        postMapper.insert(second);
+
+        List<PostFeedRow> rows = postMapper.findFollowingNewerThan(authorId, first.getId(), 10);
+
+        assertThat(rows).extracting(PostFeedRow::getId).containsExactly(second.getId());
+    }
+
+    @Test
+    void findFollowingNewerThanIncludesFolloweesPostsAndExcludesOthers() {
+        Long followeeId = insertUser("followee");
+        Long strangerId = insertUser("stranger");
+        followMapper.insertIfAbsent(authorId, followeeId, LocalDateTime.now());
+        Post baseline = newPost("基準投稿");
+        postMapper.insert(baseline);
+        Post followeePost = Post.builder().userId(followeeId).body("フォロー中ユーザーの新着")
+                .createdAt(LocalDateTime.now()).updatedAt(LocalDateTime.now()).build();
+        postMapper.insert(followeePost);
+        Post strangerPost = Post.builder().userId(strangerId).body("無関係な新着")
+                .createdAt(LocalDateTime.now()).updatedAt(LocalDateTime.now()).build();
+        postMapper.insert(strangerPost);
+
+        List<PostFeedRow> rows = postMapper.findFollowingNewerThan(authorId, baseline.getId(), 10);
+
+        assertThat(rows).extracting(PostFeedRow::getId).containsExactly(followeePost.getId());
+    }
+
+    @Test
+    void findFollowingNewerThanReturnsEmptyWhenNoNewerPosts() {
+        Post first = newPost("1件目");
+        postMapper.insert(first);
+
+        List<PostFeedRow> rows = postMapper.findFollowingNewerThan(authorId, first.getId(), 10);
+
+        assertThat(rows).isEmpty();
+    }
+
+    @Test
+    void findFollowingNewerThanRespectsLimit() {
+        Post first = newPost("1件目");
+        postMapper.insert(first);
+        postMapper.insert(newPost("2件目"));
+        postMapper.insert(newPost("3件目"));
+
+        List<PostFeedRow> rows = postMapper.findFollowingNewerThan(authorId, first.getId(), 1);
 
         assertThat(rows).hasSize(1);
     }
