@@ -155,12 +155,35 @@ class PostServiceTest {
     }
 
     @Test
-    void getTimelineReturnsEmptyListForFollowingScope() {
+    void getTimelineUsesFollowingFeedMapperForFollowingScope() {
+        List<PostFeedRow> rows = List.of(feedRow(3L), feedRow(2L));
+        when(postMapper.findFollowingFeed(5L, null, 21)).thenReturn(rows);
+
         TimelineResponse response = postService.getTimeline(5L, "following", null, null);
 
-        assertThat(response.posts()).isEmpty();
-        assertThat(response.nextCursor()).isNull();
+        assertThat(response.posts()).extracting(PostResponse::id).containsExactly(3L, 2L);
+        verify(postMapper).findFollowingFeed(5L, null, 21);
         verify(postMapper, never()).findFeed(any(), anyInt());
+    }
+
+    @Test
+    void getTimelineFollowingScopeClampsLimitToMaximum() {
+        when(postMapper.findFollowingFeed(5L, null, 51)).thenReturn(List.of());
+
+        postService.getTimeline(5L, "following", null, 1000);
+
+        verify(postMapper).findFollowingFeed(5L, null, 51);
+    }
+
+    @Test
+    void getTimelineFollowingScopeSetsNextCursorWhenMoreResultsExist() {
+        List<PostFeedRow> rows = List.of(feedRow(3L), feedRow(2L), feedRow(1L));
+        when(postMapper.findFollowingFeed(5L, null, 3)).thenReturn(rows);
+
+        TimelineResponse response = postService.getTimeline(5L, "following", null, 2);
+
+        assertThat(response.posts()).hasSize(2);
+        assertThat(response.nextCursor()).isEqualTo(2L);
     }
 
     @Test
@@ -232,10 +255,13 @@ class PostServiceTest {
     }
 
     @Test
-    void getNewPostsReturnsEmptyListForFollowingScope() {
+    void getNewPostsUsesFollowingNewerThanMapperForFollowingScope() {
+        List<PostFeedRow> rows = List.of(feedRow(3L), feedRow(2L));
+        when(postMapper.findFollowingNewerThan(5L, 1L, 50)).thenReturn(rows);
+
         List<PostResponse> posts = postService.getNewPosts(5L, "following", 1L);
 
-        assertThat(posts).isEmpty();
+        assertThat(posts).extracting(PostResponse::id).containsExactly(3L, 2L);
         verify(postMapper, never()).findNewerThan(any(), anyInt());
     }
 

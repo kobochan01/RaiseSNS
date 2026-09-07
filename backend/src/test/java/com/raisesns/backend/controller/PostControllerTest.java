@@ -220,7 +220,7 @@ class PostControllerTest extends AbstractIntegrationTest {
     }
 
     @Test
-    void timelineWithSinceIdReturnsEmptyListForFollowingScope() throws Exception {
+    void timelineWithSinceIdReturnsEmptyListForFollowingScopeWhenNoNewerPosts() throws Exception {
         Cookie accessToken = registerAndLogin("timelineuser5", "timelineuser5@example.com");
         Long firstId = createPost(accessToken, "1件目");
 
@@ -230,13 +230,14 @@ class PostControllerTest extends AbstractIntegrationTest {
     }
 
     @Test
-    void timelineReturnsEmptyListForFollowingScope() throws Exception {
+    void timelineIncludesOwnPostsForFollowingScopeEvenWithoutFollowing() throws Exception {
         Cookie accessToken = registerAndLogin("timelineuser3", "timelineuser3@example.com");
         createPost(accessToken, "1件目");
 
         mockMvc.perform(get("/api/posts").cookie(accessToken).param("scope", "following"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.posts.length()").value(0));
+                .andExpect(jsonPath("$.posts.length()").value(1))
+                .andExpect(jsonPath("$.posts[0].body").value("1件目"));
     }
 
     @Test

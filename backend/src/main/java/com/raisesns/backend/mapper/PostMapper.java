@@ -75,4 +75,38 @@ public interface PostMapper {
             """)
     List<PostFeedRow> findByUserId(@Param("userId") Long userId, @Param("cursor") Long cursor,
                                     @Param("limit") int limit);
+
+    @Select("""
+            <script>
+            SELECT p.id AS id, p.user_id AS user_id, p.body AS body, p.image_url AS image_url,
+                   p.created_at AS created_at, p.updated_at AS updated_at,
+                   u.id AS author_id, u.username AS author_username,
+                   u.display_name AS author_display_name, u.avatar_url AS author_avatar_url
+            FROM posts p
+            JOIN users u ON u.id = p.user_id
+            WHERE (p.user_id IN (SELECT followee_id FROM follows WHERE follower_id = #{followerId})
+                   OR p.user_id = #{followerId})
+            <if test="cursor != null">AND p.id &lt; #{cursor}</if>
+            ORDER BY p.id DESC
+            LIMIT #{limit}
+            </script>
+            """)
+    List<PostFeedRow> findFollowingFeed(@Param("followerId") Long followerId, @Param("cursor") Long cursor,
+                                         @Param("limit") int limit);
+
+    @Select("""
+            SELECT p.id AS id, p.user_id AS user_id, p.body AS body, p.image_url AS image_url,
+                   p.created_at AS created_at, p.updated_at AS updated_at,
+                   u.id AS author_id, u.username AS author_username,
+                   u.display_name AS author_display_name, u.avatar_url AS author_avatar_url
+            FROM posts p
+            JOIN users u ON u.id = p.user_id
+            WHERE (p.user_id IN (SELECT followee_id FROM follows WHERE follower_id = #{followerId})
+                   OR p.user_id = #{followerId})
+              AND p.id > #{sinceId}
+            ORDER BY p.id DESC
+            LIMIT #{limit}
+            """)
+    List<PostFeedRow> findFollowingNewerThan(@Param("followerId") Long followerId, @Param("sinceId") Long sinceId,
+                                              @Param("limit") int limit);
 }
