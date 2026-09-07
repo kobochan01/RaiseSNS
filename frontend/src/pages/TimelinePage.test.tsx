@@ -272,4 +272,23 @@ describe('TimelinePage', () => {
     await waitFor(() => expect(logout).toHaveBeenCalled())
     await waitFor(() => expect(mockNavigate).toHaveBeenCalledWith('/login'))
   })
+
+  it('navigates to the search page with the entered keyword on submit', async () => {
+    renderTimelinePage()
+    await screen.findByRole('button', { name: '全体' })
+
+    await userEvent.type(screen.getByPlaceholderText('ユーザーを検索(@username)'), 'taro')
+    await userEvent.click(screen.getByRole('button', { name: '検索' }))
+
+    expect(mockNavigate).toHaveBeenCalledWith('/search?q=taro')
+  })
+
+  it('does not navigate when the search keyword is blank', async () => {
+    renderTimelinePage()
+    await screen.findByRole('button', { name: '全体' })
+
+    await userEvent.click(screen.getByRole('button', { name: '検索' }))
+
+    expect(mockNavigate).not.toHaveBeenCalledWith(expect.stringContaining('/search'))
+  })
 })

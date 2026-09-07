@@ -10,6 +10,7 @@ import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -139,5 +140,40 @@ class UserMapperTest extends AbstractIntegrationTest {
         User found = userMapper.findById(user.getId()).orElseThrow();
         assertThat(found.getAvatarUrl())
                 .isEqualTo("https://example-bucket.s3.ap-northeast-1.amazonaws.com/avatars/abc.png");
+    }
+
+    @Test
+    void searchByUsernameReturnsCaseInsensitivePartialMatches() {
+        userMapper.insert(newUser("searchxyzAlice", "searchxyz-alice@example.com"));
+        userMapper.insert(newUser("searchxyzAlbert", "searchxyz-albert@example.com"));
+        userMapper.insert(newUser("unrelateduser1", "unrelated1@example.com"));
+
+        List<User> found = userMapper.searchByUsername("SEARCHXYZAL", 20, 0);
+
+        assertThat(found).extracting(User::getUsername)
+                .containsExactlyInAnyOrder("searchxyzAlice", "searchxyzAlbert");
+    }
+
+    @Test
+    void searchByUsernameRespectsLimitAndOffset() {
+        userMapper.insert(newUser("searchpage1", "searchpage1@example.com"));
+        userMapper.insert(newUser("searchpage2", "searchpage2@example.com"));
+        userMapper.insert(newUser("searchpage3", "searchpage3@example.com"));
+
+        List<User> firstPage = userMapper.searchByUsername("searchpage", 2, 0);
+        List<User> secondPage = userMapper.searchByUsername("searchpage", 2, 2);
+
+        assertThat(firstPage).hasSize(2);
+        assertThat(secondPage).hasSize(1);
+    }
+
+    @Test
+    void countByUsernameContainingReturnsMatchingCount() {
+        userMapper.insert(newUser("countkeywordone", "countkeywordone@example.com"));
+        userMapper.insert(newUser("countkeywordtwo", "countkeywordtwo@example.com"));
+
+        int count = userMapper.countByUsernameContaining("countkeyword");
+
+        assertThat(count).isEqualTo(2);
     }
 }

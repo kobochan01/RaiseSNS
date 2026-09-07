@@ -2,7 +2,10 @@ package com.raisesns.backend.service;
 
 import com.raisesns.backend.dto.request.UpdateProfileRequest;
 import com.raisesns.backend.dto.response.ProfileResponse;
+import com.raisesns.backend.dto.response.UserSearchResponse;
+import com.raisesns.backend.dto.response.UserSearchResultResponse;
 import com.raisesns.backend.entity.User;
+import com.raisesns.backend.exception.BlankSearchKeywordException;
 import com.raisesns.backend.exception.ProfileAccessDeniedException;
 import com.raisesns.backend.exception.UserNotFoundException;
 import com.raisesns.backend.mapper.FollowMapper;
@@ -11,9 +14,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class UserService {
+
+    private static final int DEFAULT_SEARCH_LIMIT = 20;
+    private static final int MAX_SEARCH_LIMIT = 50;
 
     private final UserMapper userMapper;
     private final FollowMapper followMapper;
@@ -39,6 +47,30 @@ public class UserService {
                 LocalDateTime.now());
         User updated = findByUsername(username);
         return toProfileResponse(userId, updated);
+    }
+
+    public UserSearchResponse searchUsers(String keyword, Integer limit, Integer offset) {
+        if (keyword == null || keyword.isBlank()) {
+            throw new BlankSearchKeywordException();
+        }
+
+        int normalizedLimit = normalizeLimit(limit);
+        int normalizedOffset = offset == null ? 0 : Math.max(0, offset);
+
+        List<User> users = userMapper.searchByUsername(keyword, normalizedLimit, normalizedOffset);
+        int totalCount = userMapper.countByUsernameContaining(keyword);
+
+        List<UserSearchResultResponse> results = users.stream()
+                .map(user -> new UserSearchResultResponse(user.getUsername(), user.getDisplayName(), user.getAvatarUrl()))
+                .collect(Collectors.toList());
+        return new UserSearchResponse(results, totalCount);
+    }
+
+    private int normalizeLimit(Integer limit) {
+        if (limit == null) {
+            return DEFAULT_SEARCH_LIMIT;
+        }
+        return Math.max(1, Math.min(limit, MAX_SEARCH_LIMIT));
     }
 
     private User findByUsername(String username) {

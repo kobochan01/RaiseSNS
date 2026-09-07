@@ -9,6 +9,7 @@ import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 @Mapper
@@ -43,4 +44,16 @@ public interface UserMapper {
     void updateProfile(@Param("id") Long id, @Param("displayName") String displayName,
                         @Param("bio") String bio, @Param("avatarUrl") String avatarUrl,
                         @Param("updatedAt") LocalDateTime updatedAt);
+
+    @Select("""
+            SELECT * FROM users
+            WHERE username ILIKE CONCAT('%', #{keyword}, '%')
+            ORDER BY username
+            LIMIT #{limit} OFFSET #{offset}
+            """)
+    List<User> searchByUsername(@Param("keyword") String keyword, @Param("limit") int limit,
+                                 @Param("offset") int offset);
+
+    @Select("SELECT COUNT(*) FROM users WHERE username ILIKE CONCAT('%', #{keyword}, '%')")
+    int countByUsernameContaining(@Param("keyword") String keyword);
 }
