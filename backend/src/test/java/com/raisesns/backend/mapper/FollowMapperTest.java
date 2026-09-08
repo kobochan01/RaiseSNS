@@ -140,4 +140,15 @@ class FollowMapperTest extends AbstractIntegrationTest {
         FollowUserRow rowA = rows.stream().filter(r -> r.getId().equals(userAId)).findFirst().orElseThrow();
         assertThat(rowA.isFollowedByMe()).isFalse();
     }
+
+    @Test
+    void findFollowersRespectsLimit() {
+        Long userCId = insertUser("followerC");
+        followMapper.insertIfAbsent(userAId, userBId, LocalDateTime.now());
+        followMapper.insertIfAbsent(userCId, userBId, LocalDateTime.now());
+
+        List<FollowUserRow> rows = followMapper.findFollowers(userBId, userAId, 1);
+
+        assertThat(rows).hasSize(1);
+    }
 }

@@ -124,6 +124,30 @@ class FollowControllerTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void unfollowReturns404WhenTargetDoesNotExist() throws Exception {
+        Cookie followerToken = registerAndLogin("follower7", "follower7@example.com");
+
+        mockMvc.perform(delete("/api/users/nobody/follow").cookie(followerToken))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void getFollowingReturns404WhenTargetDoesNotExist() throws Exception {
+        Cookie followerToken = registerAndLogin("follower8", "follower8@example.com");
+
+        mockMvc.perform(get("/api/users/nobody/following").cookie(followerToken))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void getFollowersReturns404WhenTargetDoesNotExist() throws Exception {
+        Cookie followerToken = registerAndLogin("follower9", "follower9@example.com");
+
+        mockMvc.perform(get("/api/users/nobody/followers").cookie(followerToken))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
     void getFollowingReturnsFollowedUsers() throws Exception {
         registerAndLogin("followee5", "followee5@example.com");
         Cookie followerToken = registerAndLogin("follower5", "follower5@example.com");

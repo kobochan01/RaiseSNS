@@ -109,4 +109,44 @@ class FollowServiceTest {
         assertThat(response.users().get(0).username()).isEqualTo("saburo");
         assertThat(response.users().get(0).isFollowedByMe()).isFalse();
     }
+
+    @Test
+    void getFollowingClampsLimitToMaximum() {
+        when(userMapper.findByUsername("taro")).thenReturn(Optional.of(existingUser(1L, "taro")));
+        when(followMapper.findFollowing(1L, 99L, 50)).thenReturn(List.of());
+
+        followService.getFollowing(99L, "taro", 1000);
+
+        verify(followMapper).findFollowing(1L, 99L, 50);
+    }
+
+    @Test
+    void getFollowingClampsLimitToMinimumWhenZeroOrNegative() {
+        when(userMapper.findByUsername("taro")).thenReturn(Optional.of(existingUser(1L, "taro")));
+        when(followMapper.findFollowing(1L, 99L, 1)).thenReturn(List.of());
+
+        followService.getFollowing(99L, "taro", -1);
+
+        verify(followMapper).findFollowing(1L, 99L, 1);
+    }
+
+    @Test
+    void getFollowersClampsLimitToMaximum() {
+        when(userMapper.findByUsername("taro")).thenReturn(Optional.of(existingUser(1L, "taro")));
+        when(followMapper.findFollowers(1L, 99L, 50)).thenReturn(List.of());
+
+        followService.getFollowers(99L, "taro", 1000);
+
+        verify(followMapper).findFollowers(1L, 99L, 50);
+    }
+
+    @Test
+    void getFollowersClampsLimitToMinimumWhenZeroOrNegative() {
+        when(userMapper.findByUsername("taro")).thenReturn(Optional.of(existingUser(1L, "taro")));
+        when(followMapper.findFollowers(1L, 99L, 1)).thenReturn(List.of());
+
+        followService.getFollowers(99L, "taro", 0);
+
+        verify(followMapper).findFollowers(1L, 99L, 1);
+    }
 }
