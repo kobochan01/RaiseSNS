@@ -14,3 +14,4 @@
 |---|---|---|
 | 2026-09-02 | #3 | 会員登録・ログイン機能（JWT認証、MyBatis、Flyway）のバックエンド実装。`backend/`をGradleプロジェクトとして新規作成 |
 | 2026-09-08 | #21 | フォロー中タイムライン機能のバックエンド実装。フロントエンドは事前に対応済みだったため、`PostMapper`/`PostService`にフォロー中スコープ用のクエリを追加するのみで完結 |
+| 2026-09-08 | #24 | springdoc-openapiを導入しSwagger UI/OpenAPI JSONを自動生成できるようにした。Spring Boot 3.5.0同梱のSpring Web 6.2.7に起因するパスパターン解析のバグを避けるため、springdocは2.8.13に固定した |
