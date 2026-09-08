@@ -15,3 +15,4 @@
 | 2026-09-02 | #3 | 会員登録・ログイン機能（JWT認証、MyBatis、Flyway）のバックエンド実装。`backend/`をGradleプロジェクトとして新規作成 |
 | 2026-09-08 | #21 | フォロー中タイムライン機能のバックエンド実装。フロントエンドは事前に対応済みだったため、`PostMapper`/`PostService`にフォロー中スコープ用のクエリを追加するのみで完結 |
 | 2026-09-08 | #24 | springdoc-openapiを導入しSwagger UI/OpenAPI JSONを自動生成できるようにした。Spring Boot 3.5.0同梱のSpring Web 6.2.7に起因するパスパターン解析のバグを避けるため、springdocは2.8.13に固定した |
+| 2026-09-09 | #26 | 単体テストのギャップ埋め。既存のController/Service/Mapperテストは401/403/404/400のエラー系・所有者チェック・limitクランプまで網羅した高品質なものが揃っていたため全面書き直しはせず、唯一未カバーだった`RefreshTokenMapper`とAuth/Followの一部エッジケース、フロントエンドのAPIクライアント層(`src/api/*.ts`)・`AuthContext`・`utils`のテストを追加した。テスト用DBはH2を使わず既存のTestcontainers+実PostgreSQLコンテナ方針を継続(FlywayマイグレーションがPostgreSQL方言のSQLを使っており完全互換ではないため) |
