@@ -80,6 +80,22 @@ class AuthControllerTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void registerReturns409ForDuplicateEmail() throws Exception {
+        RegisterRequest first = new RegisterRequest("dupemail1", "dupemail@example.com", "password123", "表示名1");
+        RegisterRequest second = new RegisterRequest("dupemail2", "dupemail@example.com", "password123", "表示名2");
+
+        mockMvc.perform(post("/api/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(first)))
+                .andExpect(status().isCreated());
+
+        mockMvc.perform(post("/api/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(second)))
+                .andExpect(status().isConflict());
+    }
+
+    @Test
     void loginReturns200WithHttpOnlyCookieAndUserInfo() throws Exception {
         RegisterRequest registerRequest =
                 new RegisterRequest("loginuser", "loginuser@example.com", "password123", "ログインユーザー");

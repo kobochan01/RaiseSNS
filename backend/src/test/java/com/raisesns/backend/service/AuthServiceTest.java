@@ -190,6 +190,24 @@ class AuthServiceTest {
     }
 
     @Test
+    void refreshThrowsInvalidRefreshTokenWhenUserNoLongerExists() {
+        RefreshToken existing = RefreshToken.builder()
+                .id(1L)
+                .userId(5L)
+                .tokenHash("hashed-old-token")
+                .expiresAt(LocalDateTime.now().plusDays(1))
+                .createdAt(LocalDateTime.now())
+                .build();
+        when(refreshTokenProvider.hash("raw-old-token")).thenReturn("hashed-old-token");
+        when(refreshTokenMapper.findValidByTokenHash("hashed-old-token")).thenReturn(Optional.of(existing));
+        when(userMapper.findById(5L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> authService.refresh("raw-old-token"))
+                .isInstanceOf(InvalidRefreshTokenException.class);
+        verify(refreshTokenMapper).revokeByTokenHash("hashed-old-token");
+    }
+
+    @Test
     void logoutRevokesTokenWhenPresent() {
         when(refreshTokenProvider.hash("raw-token")).thenReturn("hashed-token");
 
