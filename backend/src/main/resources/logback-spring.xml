@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+
+    <!-- spring.application.name (application.yml: "backend") をDatadogの
+         Unified Service Tagging "service" タグとして使う -->
+    <springProperty scope="context" name="appName" source="spring.application.name" defaultValue="backend"/>
+
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+            <!-- Datadog Unified Service Tagging: service / env / version。
+                 DD_ENV / DD_VERSION はOS環境変数として渡すだけでよく、
+                 Datadog AgentやAPIキーはアプリ側に不要。 -->
+            <customFields>{"service":"${appName}","env":"${DD_ENV:-local}","version":"${DD_VERSION:-unknown}"}</customFields>
+        </encoder>
+    </appender>
+
+    <root level="INFO">
+        <appender-ref ref="CONSOLE"/>
+    </root>
+
+</configuration>

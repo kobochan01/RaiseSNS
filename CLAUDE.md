@@ -41,3 +41,4 @@ npm run dev
 - docs/screen-design.md
 - docs/database-design.md
 - docs/features/（機能単位の機能定義書）
+- docs/observability.md（運用監視・障害対応設計書）
