@@ -18,6 +18,7 @@
 | API | REST API（Spring Web MVC） | Spring Boot 3.5.0 同梱 |
 | ORM | MyBatis | 3.0.4（mybatis-spring-boot-starter） |
 | 認証 | Spring Security + JWT（メールアドレス＋パスワード、パスワードはハッシュ化、JWTをHttpOnly Cookieで発行） | Spring Boot 3.5.0 同梱 / jjwt 0.12.6 |
+| ログ | 構造化JSON（logstash-logback-encoder）を標準出力へ出力。Datadog Agentでのログ収集を想定し、service/env/versionのUnified Service Tagging用フィールドを付与 | 8.1 |
 | DBマイグレーション | Flyway | Spring Boot 3.5.0 同梱 |
 | API仕様書 | springdoc-openapi（Swagger UI） | 2.8.13 |
 | ビルドツール | Gradle | 9.7.1 |

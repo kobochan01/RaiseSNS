@@ -43,6 +43,11 @@ dependencies {
 	implementation platform('software.amazon.awssdk:bom:2.51.1')
 	implementation 'software.amazon.awssdk:s3'
 
+	// logstash-logback-encoder 9.0以降はJackson 3.x前提になり、Spring Boot 3.5.0が同梱する
+	// Jackson 2.x系(MVC/springdoc等)と衝突する。8.1はBoot 3.5.0のLogback 1.5.18 / Jackson 2.18.3系列に
+	// 対応した最終版のため、これに固定する。
+	implementation 'net.logstash.logback:logstash-logback-encoder:8.1'
+
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'org.springframework.security:spring-security-test'
 	testImplementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter-test:3.0.4'
