@@ -3,8 +3,11 @@ package com.raisesns.backend.exception;
 import com.raisesns.backend.dto.response.ErrorResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.TypeMismatchException;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -114,8 +117,30 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(new ErrorResponse(ex.getMessage(), null));
     }
 
+    @ExceptionHandler({HttpMessageNotReadableException.class, TypeMismatchException.class})
+    public ResponseEntity<ErrorResponse> handleMalformedRequest(Exception ex) {
+        // 不正なJSONボディ・パス変数の型不一致はSpring標準ではErrorResponseを実装しておらず、
+        // handleUnexpectedErrorのcatch-allに落ちると500(サーバーエラー)扱いになってしまう。
+        // クライアント起因の入力不正のため400として扱う。
+        log.warn(ex.getMessage());
+        return ResponseEntity.badRequest().body(new ErrorResponse("入力内容を確認してください", null));
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleUnexpectedError(Exception ex) {
+        // HttpRequestMethodNotSupportedException・NoResourceFoundException等、Spring MVCの
+        // 標準例外はorg.springframework.web.ErrorResponseを実装しており正しいステータスコードを
+        // 保持している。これらまで500にしてしまうとクライアント起因の誤りが障害として誤検知されるため、
+        // 本来のステータスコードを尊重する。
+        if (ex instanceof org.springframework.web.ErrorResponse errorResponseEx) {
+            HttpStatusCode status = errorResponseEx.getStatusCode();
+            if (status.is5xxServerError()) {
+                log.error(ex.getMessage(), ex);
+            } else {
+                log.warn(ex.getMessage());
+            }
+            return ResponseEntity.status(status).body(new ErrorResponse(ex.getMessage(), null));
+        }
         log.error("unexpected error", ex);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(new ErrorResponse("予期しないエラーが発生しました", null));

@@ -9,8 +9,13 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.TypeMismatchException;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
+
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -47,5 +52,32 @@ class GlobalExceptionHandlerTest {
         assertThat(event.getLevel()).isEqualTo(Level.ERROR);
         assertThat(event.getThrowableProxy()).isNotNull();
         assertThat(event.getThrowableProxy().getMessage()).isEqualTo("boom");
+    }
+
+    @Test
+    void springMvcExceptionKeepsItsOwnStatusCodeAndLogsAtWarnInsteadOf500() {
+        HttpRequestMethodNotSupportedException ex =
+                new HttpRequestMethodNotSupportedException("GET", List.of(HttpMethod.POST.name()));
+
+        ResponseEntity<ErrorResponse> response = handler.handleUnexpectedError(ex);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.METHOD_NOT_ALLOWED);
+
+        assertThat(listAppender.list).hasSize(1);
+        ILoggingEvent event = listAppender.list.get(0);
+        assertThat(event.getLevel()).isEqualTo(Level.WARN);
+    }
+
+    @Test
+    void typeMismatchIsTreatedAsClientErrorNotUnexpectedServerError() {
+        TypeMismatchException ex = new TypeMismatchException("not-a-number", Long.class);
+
+        ResponseEntity<ErrorResponse> response = handler.handleMalformedRequest(ex);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(response.getBody().message()).isEqualTo("入力内容を確認してください");
+
+        assertThat(listAppender.list).hasSize(1);
+        assertThat(listAppender.list.get(0).getLevel()).isEqualTo(Level.WARN);
     }
 }
